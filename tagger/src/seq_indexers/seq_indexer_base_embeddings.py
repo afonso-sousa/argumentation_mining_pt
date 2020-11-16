@@ -12,17 +12,20 @@ class SeqIndexerBaseEmbeddings(SeqIndexerBase):
         SeqIndexerBase.__init__(self, gpu, check_for_lowercase, zero_digits, pad, unk, load_embeddings, embeddings_dim,
                                 verbose)
     @staticmethod
-    def load_embeddings_from_file(emb_fn, emb_delimiter, verbose=True):
-        for k, line in enumerate(open(emb_fn, 'r')):
-            values = line.split(emb_delimiter)
-            if len(values) < 5:
-                continue
-            word = values[0]
-            emb_vector = list(map(lambda t: float(t), filter(lambda n: n and not n.isspace(), values[1:])))
-            if verbose:
-                if k % 25000 == 0:
-                    print('Reading embeddings file %s, line = %d' % (emb_fn, k))
-            yield word, emb_vector
+    def load_embeddings_from_file(emb_fn, emb_delimiter, skip_first=False, verbose=True):
+        with open(emb_fn, 'r') as f:
+            if skip_first:
+                next(f)
+            for k, line in enumerate(f):
+                values = line.split(emb_delimiter)
+                if len(values) < 5:
+                    continue
+                word = values[0]
+                emb_vector = list(map(lambda t: float(t), filter(lambda n: n and not n.isspace(), values[1:])))
+                if verbose:
+                    if k % 25000 == 0:
+                        print('Reading embeddings file %s, line = %d' % (emb_fn, k))
+                yield word, emb_vector
 
     def generate_zero_emb_vector(self):
         if self.embeddings_dim == 0:

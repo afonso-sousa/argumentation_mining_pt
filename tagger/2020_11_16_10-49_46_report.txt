@@ -1,0 +1,50 @@
+Evaluation
+
+batch_size=8
+char_cnn_filter_num=30
+char_embeddings_dim=25
+char_window_size=3
+check_for_lowercase=True
+clip_grad=5
+cross_fold_id=-1
+cross_folds_num=-1
+data_io='connl-pe'
+dataset_sort=False
+dev='../data/AM/persuasive_essays/Paragraph_Level/dev.dat.abs'
+dropout_ratio=0.5
+emb_delimiter=' '
+emb_dim=100
+emb_fn='embeddings/glove.6B.100d.txt'
+emb_load_all=False
+epoch_num=100
+evaluator='f1-alpha-match-10'
+freeze_char_embeddings=False
+freeze_word_embeddings=False
+gpu=0
+load=None
+lr=0.001
+lr_decay=0.05
+min_epoch_num=50
+model='BiRNNCNNCRF'
+momentum=0.9
+opt='adam'
+patience=20
+report_fn='2020_11_16_10-49_46_report.txt'
+rnn_hidden_dim=200
+rnn_type='LSTM'
+save='2020_11_16_10-49_46_tagger.hdf5'
+save_best=True
+seed_num=42
+test='../data/AM/persuasive_essays/Paragraph_Level/test.dat.abs'
+train='../data/AM/persuasive_essays/Paragraph_Level/train.dat.abs'
+verbose=True
+word_len=20
+word_seq_indexer=None
+
+         epoch  |     train loss | f1-alpha-match-10-train | f1-alpha-match-10-dev | f1-alpha-match-10-test 
+--------------------------------------------------------------------------------------------------------------
+              0 |           0.00 |           0.07 |           0.00 |           0.08 
+              1 |        1614.70 |           0.46 |           1.90 |           0.00 
+              2 |         789.97 |          12.41 |          11.07 |          11.75 
+              3 |         727.14 |          42.54 |          42.17 |          43.90 
+              4 |         667.16 |          44.52 |          43.80 |          45.77 
