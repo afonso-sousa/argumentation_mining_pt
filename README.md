@@ -16,6 +16,10 @@ It uses code from the following third-party repositories:
 
 ## Evaluation
 
+```python
+python run_tagger.py 2020_11_18_15-15_51_tagger.hdf5 ../data/AM/persuasive_essays/Paragraph_Level/test.dat.abs -d connl-pe
+```
+
 ## Usage
 
 ### Train/test
