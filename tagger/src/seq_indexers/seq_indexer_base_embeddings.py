@@ -6,7 +6,7 @@ from src.seq_indexers.seq_indexer_base import SeqIndexerBase
 
 class SeqIndexerBaseEmbeddings(SeqIndexerBase):
     """
-    SeqIndexerBaseEmbeddings is a basic abstract sequence indexers class that implements work qith embeddings.
+    SeqIndexerBaseEmbeddings is a basic abstract sequence indexers class that implements work with embeddings.
     """
     def __init__(self, gpu, check_for_lowercase, zero_digits, pad, unk, load_embeddings, embeddings_dim, verbose):
         SeqIndexerBase.__init__(self, gpu, check_for_lowercase, zero_digits, pad, unk, load_embeddings, embeddings_dim,
