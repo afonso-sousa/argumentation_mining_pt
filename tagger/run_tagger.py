@@ -33,6 +33,10 @@ if __name__ == "__main__":
     # Read data in CoNNL-2003 file format format
     word_sequences, targets_tag_sequences_test = \
         data_io.read_data(args.input)
+
+    word_sequences = [sentence for sentence in word_sequences if len(sentence) > 0]
+    targets_tag_sequences_test = [sentence for sentence in targets_tag_sequences_test if len(sentence) > 0]
+    
     # Create evaluator
     evaluator = EvaluatorFactory.create(args)
     # Get tags as sequences of strings

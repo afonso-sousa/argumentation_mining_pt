@@ -13,6 +13,7 @@ from src.factories.factory_optimizer import OptimizerFactory
 from src.factories.factory_tagger import TaggerFactory
 from src.seq_indexers.seq_indexer_tag import SeqIndexerTag
 from src.seq_indexers.seq_indexer_word import SeqIndexerWord
+import sys
 
 
 if __name__ == "__main__":
@@ -85,6 +86,14 @@ if __name__ == "__main__":
     # Load text data as lists of lists of words (sequences) and corresponding list of lists of tags
     data_io = DataIOFactory.create(args)
     word_sequences_train, tag_sequences_train, word_sequences_dev, tag_sequences_dev, word_sequences_test, tag_sequences_test = data_io.read_train_dev_test(args)
+    
+    word_sequences_train = [sentence for sentence in word_sequences_train if len(sentence) > 0]
+    tag_sequences_train = [sentence for sentence in tag_sequences_train if len(sentence) > 0]
+    word_sequences_dev = [sentence for sentence in word_sequences_dev if len(sentence) > 0]
+    tag_sequences_dev = [sentence for sentence in tag_sequences_dev if len(sentence) > 0]
+    word_sequences_test = [sentence for sentence in word_sequences_test if len(sentence) > 0]
+    tag_sequences_test = [sentence for sentence in tag_sequences_test if len(sentence) > 0]
+
     # DatasetsBank provides storing the different dataset subsets (train/dev/test) and sampling batches
     datasets_bank = DatasetsBankFactory.create(args)
     datasets_bank.add_train_sequences(word_sequences_train, tag_sequences_train)

@@ -152,4 +152,6 @@ dmypy.json
 # Local files
 data/*
 tagger/embeddings/*
+tagger/trained/*
 images/*
+umwe/

@@ -1,5 +1,4 @@
 import argparse
-from pathlib import Path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Merge files.",

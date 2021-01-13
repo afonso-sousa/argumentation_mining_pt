@@ -1,20 +1,19 @@
+"""
+Script base from https://github.com/UKPLab/coling2018-xling_argument_mining/blob/master/code/annotationProjection/projectArguments.py
+"""
+# %%
+
+import argparse
+import os
 import sys
+from pathlib import Path
 
-from utils import read_doc as rd
+import nltk
+from nltk.tokenize import sent_tokenize
 
-# project argument spans from source to target document
-# Steffen Eger
-# 03/2018
+from utils import read_doc
 
-# SAMPLE USAGE:
-# python2 projectArguments.py train_full.dat test_full.dat dev_full.dat essays.aligned essays.aligned.bidirectional
-#
-# Inputs:
-#         $x_full.dat: train, test, dev annotated data in source language
-#         essays.aligned: aligned sentences in source and target language (source sentences must all be in train/dev/test.dat)
-#         essays.aligned.bidirectional: word alignments (e.g., produced by fast_align)
-# Outputs:
-#         my${x}_gen1.dat: train, test, dev projected annotation spans in the target language
+# nltk.download('punkt')
 
 
 K = 1
@@ -24,8 +23,8 @@ def isConsecutive(lst, descending=False):
     last = None
     for x in lst:
         if last is not None:
-            next = last-1 if descending else last+1
-            if x != next:
+            next_val = last-1 if descending else last+1
+            if x != next_val:
                 return False
         last = x
     return True
@@ -43,27 +42,27 @@ def findExtremeConsecutive(lst, reverse=True, k=1):
 def detect_bios(labels):
     indices = []
     startComponent = False
-    startindex = None
-    type = None
+    startindex = 0
+    component_type = 'O'
     for index, tok in enumerate(labels):
-        word, token = tok
+        _, token = tok
         if startComponent == True and token.startswith("B-"):
             endindex = index-1
-            indices.append((startindex, endindex, type))
+            indices.append((startindex, endindex, component_type))
             startindex = index
-            type = token.split(":")[0][2:]
+            component_type = token.split(":")[0][2:]
             startComponent = True
         elif startComponent == True and token.startswith("O"):
             endindex = index-1
-            indices.append((startindex, endindex, type))
+            indices.append((startindex, endindex, component_type))
             startComponent = False
         elif token.startswith("B-"):
-            type = token.split(":")[0][2:]
+            component_type = token.split(":")[0][2:]
             startComponent = True
             startindex = index
-    if token.startswith("I-"):
-        endindex = index
-        indices.append((startindex, endindex, type))
+        elif token.startswith("I-"):
+            endindex = index
+            indices.append((startindex, endindex, component_type))
     return indices
 
 
@@ -75,22 +74,16 @@ def getTranslationIndices(indices, align):
             h[a] = h[a]+[b]
         else:
             h[a] = [b]
-    # print(h,align,indices)
-    # sys.exit(1)
     aligns = []
     for x in indices:
-        start, end, type = x
+        start, end, component_type = x
         q = []
         for z in range(start, end+1):
-            # print("-->",z,h)
-            # print(h[z])
-            q.append(h.get(z, None))
+            q.append(h.get(z))
         qq = list(filter(lambda x: x != None, q))
         flat_list = [item for sublist in qq for item in sublist]
-        # print("##->",flat_list,x)
-        #print(flat_list); sys.exit(1)
-        # YOU MAY WANT TO CHANGE THIS
-        indexStart, indexEnd = min(flat_list), max(flat_list)
+        if not flat_list:
+            break
         for myK in range(K, 0, -1):
             indexStart, indexEnd = findExtremeConsecutive(
                 flat_list, reverse=False, k=K), findExtremeConsecutive(flat_list, reverse=True, k=myK)
@@ -110,97 +103,103 @@ def getTranslationIndices(indices, align):
             sys.stderr.write(str(aligns))
             sys.stderr.write("ERROR SOMEWHERE: %d %d\n" %
                              (indexStart, indexEnd))
-            # sys.exit(1)
-            print(indices)
-        aligns.append((indexStart, indexEnd, type))
-    # print(aligns)
+        aligns.append((indexStart, indexEnd, component_type))
     return aligns
 
 
-def printout(sequence, fout, type="O"):
-    for itoken, token in enumerate(sequence):
-        if type != "O":
-            if itoken == 0:
-                pre = "B-"
+def printout(idx, sequence, output_path, component_type="O"):
+    tmp = idx
+    with open(output_path, 'a+') as output_file:
+        for itoken, token in enumerate(sequence):
+            if component_type != "O":
+                if itoken == 0:
+                    pre = "B-"
+                else:
+                    pre = "I-"
             else:
-                pre = "I-"
-        else:
-            pre = ""
-        fout.write(token+"\t"+pre+type+"\n")
+                pre = ""
+            if not component_type:
+                component_type = "O"
+            output_file.write(f'{tmp}\t{token}\t{pre}{component_type}\n')
+            tmp += 1
+    return tmp
 
-
-def process(sentences, sentences_alignments, labels, fout, verbose=False):
-    n = len(sentences)
+def process(sentences, sentences_alignments, labels, fout):
     last = 0
+    idx = 1
     for i in range(len(sentences)):
-        en, de = sentences[i]
-        en_tokens = en.split()
-        de_tokens = de.split()
-        m = len(en_tokens)
+        src, trg = sentences[i]
+        src_tokens = src.split()
+        trg_tokens = trg.split()
+        m = len(src_tokens)
         align = sentences_alignments[i].strip()
         curLabels = labels[last:last+m]
         indices = detect_bios(curLabels)
         last = last+m
-        # print(en_tokens,"\t",curLabels,"\t",de_tokens,"\t",indices)
-        # print(align)
         aligns = sorted(getTranslationIndices(indices, align))
-        if verbose:
-            print("ALIGNS", aligns, de)
-        # if aligns!=[]:
         prev = 0
-        for start, end, type in aligns:
+        for start, end, component_type in aligns:
             if start > end:
                 continue
-            before = de_tokens[prev:start]
-            middle = de_tokens[start:end+1]
+            before = trg_tokens[prev:start]
+            middle = trg_tokens[start:end+1]
             if before != []:
-                printout(before, fout)
-            printout(middle, fout, type)
+                idx = printout(idx, before, fout)
+            idx = printout(idx, middle, fout, component_type)
             prev = end+1
-        after = de_tokens[prev:]
+        after = trg_tokens[prev:]
         if after != []:
-            printout(after, fout)
-            # sys.exit(1)
+            idx = printout(idx, after, fout)
 
 
-train, train_hash = rd(sys.argv[1])
-test, test_hash = rd(sys.argv[2])
-dev, dev_hash = rd(sys.argv[3])
+def create_conll(corpus_path, alignments, translations, output_path):
+    _, annotation_dict = read_doc(corpus_path)
+    for paragraph, labels in annotation_dict.items():
+        sentences = []
+        sentences_alignments = []
+        sentences_in_paragraph = sent_tokenize(paragraph)
+        seen_sentences = []
+        for idx, trans in enumerate(translations):
+            src, trg = trans.split(" ||| ")
+            if src.strip() in sentences_in_paragraph and not src.strip() in seen_sentences:
+                # print(src)
+                sentences.append((src, trg))
+                sentences_alignments.append(alignments[idx])
+                seen_sentences.append(src.strip())
+        process(sentences, sentences_alignments, labels, output_path)
+        with open(output_path, 'a+') as output_file:
+            output_file.write("\n")
+        # sys.exit(1)
 
 
-alignedText = sys.argv[4]
-alignments = sys.argv[5]
+# %%
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Project annotations and create translated ConLL-formatted train/dev/test split.",
+                                     epilog="example: python project_annotations.py train_conll test_conll dev_conll translated_file alignment_file")
+    parser.add_argument("train_corpus_path", type=Path)
+    parser.add_argument("test_corpus_path", type=Path)
+    parser.add_argument("dev_corpus_path", type=Path)
+    parser.add_argument("translation_path", type=Path)
+    parser.add_argument("alignment_path", type=Path)
+    parser.add_argument("--output_path", type=Path, default=".")
+    args = parser.parse_args()
+    args.output_path.mkdir(parents=True, exist_ok=True)
 
-fp_lines = open(alignments).readlines()
+    alignments = open(args.alignment_path).readlines()
+    translations = open(args.translation_path).readlines()
 
-acc = []
-sentences = []
-sentences_alignments = []
-i = 0
-ftrain = open("train_gen%d.dat" % K, "w")
-ftest = open("test_gen%d.dat" % K, "w")
-fdev = open("dev_gen%d.dat" % K, "w")
-for line in open(alignedText):
-    line = line.strip()
-    en, de = line.split(" ||| ")
-    sentences.append((en, de))
-    sentences_alignments.append(fp_lines[i])
-    acc += en.split()
-    acc_text = " ".join(acc)
-    for hash in [train_hash, test_hash, dev_hash]:
-        if acc_text in hash:
-            if hash == train_hash:
-                fout = ftrain
-            elif hash == test_hash:
-                fout = ftest
-            elif hash == dev_hash:
-                fout = fdev
-            else:
-                fout = None
-            labels = hash[acc_text]
-            process(sentences, sentences_alignments, labels, fout)
-            fout.write("\n")
-            acc = []
-            sentences = []
-            sentences_alignments = []
-    i += 1
+    create_conll(args.train_corpus_path, alignments,
+                 translations, args.output_path / "pt_train.dat")
+    create_conll(args.test_corpus_path, alignments,
+                 translations, args.output_path / "pt_test.dat")
+    create_conll(args.dev_corpus_path, alignments,
+                 translations, args.output_path / "pt_dev.dat")
+
+
+# %%
+# translations = open("data/auxiliary/all_ft_translated.txt").readlines()
+# alignments = open("data/auxiliary/all_ft_translated_alignment.txt").readlines()
+# create_conll("data/persuasive_essays/Paragraph_Level/train.dat.abs",
+#              alignments, translations, "data/pt_pe/pt_train.dat")
+
+# %%
