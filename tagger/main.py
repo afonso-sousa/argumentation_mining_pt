@@ -55,6 +55,8 @@ if __name__ == "__main__":
     parser.add_argument('--emb-delimiter', default=' ', help='Delimiter for word embeddings file.')
     parser.add_argument('--emb-load-all', type=str2bool, default=False, help='Load all embeddings to model.', nargs='?',
                         choices = ['yes', True, 'no (default)', False])
+    parser.add_argument('--emb-skip-first', type=str2bool, default=False, help='Skip first row of file for Glove formatted embeddings.', nargs='?',
+                        choices = ['yes', True, 'no (default)', False])
     parser.add_argument('--freeze-word-embeddings', type=str2bool, default=False,
                         help='False to continue training the word embeddings.', nargs='?',
                         choices=['yes', True, 'no (default)', False])
@@ -104,7 +106,7 @@ if __name__ == "__main__":
         word_seq_indexer = torch.load(args.word_seq_indexer)
     else:
         word_seq_indexer = SeqIndexerWord(gpu=args.gpu, check_for_lowercase=args.check_for_lowercase,
-                                          embeddings_dim=args.emb_dim, verbose=True)
+                                          embeddings_dim=args.emb_dim, skip_first=args.emb_skip_first, verbose=True)
         word_seq_indexer.load_items_from_embeddings_file_and_unique_words_list(emb_fn=args.emb_fn,
                                                                                emb_delimiter=args.emb_delimiter,
                                                                                emb_load_all=args.emb_load_all,

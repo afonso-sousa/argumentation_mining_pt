@@ -77,14 +77,3 @@ class EvaluatorF1MacroTokenLevel(EvaluatorBase):
         print(msg)
         #self.validate_M_F1_scikitlearn( targets_tag_sequences, outputs_tag_sequences)
         return M_F1, msg
-
-    '''# for valid ation
-    def validate_M_F1_scikitlearn(self, targets_tag_sequences, outputs_tag_sequences):
-        from sklearn.metrics import f1_score
-        targets_tag_sequences_flat = [t for targets_tag_seq in targets_tag_sequences for t in targets_tag_seq]
-        outputs_tag_sequences_flat = [o for outputs_tag_seq in outputs_tag_sequences for o in outputs_tag_seq]
-        y_true = self.tag_seq_2_idx_list(targets_tag_sequences_flat)
-        y_pred = self.tag_seq_2_idx_list(outputs_tag_sequences_flat)
-        M_F1_scikitlearn = f1_score(y_true=y_true, y_pred=y_pred, average='macro', sample_weight=None)*100
-        print('Macro-F1_scikitlearn = %1.3f, for validation' % M_F1_scikitlearn)'''
-

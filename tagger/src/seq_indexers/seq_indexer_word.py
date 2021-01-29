@@ -9,7 +9,7 @@ from src.seq_indexers.seq_indexer_base_embeddings import \
 class SeqIndexerWord(SeqIndexerBaseEmbeddings):
     """SeqIndexerWord converts list of lists of words as strings to list of lists of integer indices and back."""
 
-    def __init__(self, gpu=-1, check_for_lowercase=True, embeddings_dim=0, verbose=True):
+    def __init__(self, gpu=-1, check_for_lowercase=True, embeddings_dim=0, skip_first=False, verbose=True):
         SeqIndexerBaseEmbeddings.__init__(self, gpu=gpu, check_for_lowercase=check_for_lowercase, zero_digits=True,
                                           pad='<pad>', unk='<unk>', load_embeddings=True, embeddings_dim=embeddings_dim,
                                           verbose=verbose)
@@ -19,13 +19,14 @@ class SeqIndexerWord(SeqIndexerBaseEmbeddings):
         self.zero_digits_replaced_lowercase_num = 0
         self.capitalize_word_num = 0
         self.uppercase_word_num = 0
+        self.skip_first = skip_first
 
     def load_items_from_embeddings_file_and_unique_words_list(self, emb_fn, emb_delimiter, emb_load_all,
                                                               unique_words_list):
         # Get the full list of available case-sensitive words from text file with pretrained embeddings
         embeddings_words_list = [emb_word for emb_word, _ in SeqIndexerBaseEmbeddings.load_embeddings_from_file(emb_fn,
                                                                                                                 emb_delimiter,
-                                                                                                                skip_first=True,
+                                                                                                                skip_first=self.skip_first,
                                                                                                                 verbose=True)]
         # Create reverse mapping word from the embeddings file -> list of unique words from the dataset
         emb_word_dict2unique_word_list = dict()
@@ -42,7 +43,7 @@ class SeqIndexerWord(SeqIndexerBaseEmbeddings):
                     emb_word_dict2unique_word_list[emb_word].append(
                         unique_word)
         # Add pretrained embeddings for unique_words
-        for emb_word, emb_vec in SeqIndexerBaseEmbeddings.load_embeddings_from_file(emb_fn, emb_delimiter, skip_first=True, verbose=True):
+        for emb_word, emb_vec in SeqIndexerBaseEmbeddings.load_embeddings_from_file(emb_fn, emb_delimiter, skip_first=self.skip_first, verbose=True):
             if emb_word in emb_word_dict2unique_word_list:
                 for unique_word in emb_word_dict2unique_word_list[emb_word]:
                     self.add_word_emb_vec(unique_word, emb_vec)
@@ -69,7 +70,7 @@ class SeqIndexerWord(SeqIndexerBaseEmbeddings):
             load_all_words_lower_num = 0
             load_all_words_upper_num = 0
             load_all_words_capitalize_num = 0
-            for emb_word, emb_vec in SeqIndexerBaseEmbeddings.load_embeddings_from_file(emb_fn, emb_delimiter, skip_first=True, verbose=True):
+            for emb_word, emb_vec in SeqIndexerBaseEmbeddings.load_embeddings_from_file(emb_fn, emb_delimiter, skip_first=self.skip_first, verbose=True):
                 if emb_word in loaded_words_list:
                     continue
                 if emb_word.lower() not in loaded_words_list and emb_word.lower() not in embeddings_words_list:

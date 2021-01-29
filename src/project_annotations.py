@@ -16,57 +16,37 @@ from utils import read_doc
 # nltk.download('punkt')
 
 
-K = 1
-
-
-def isConsecutive(lst, descending=False):
-    last = None
-    for x in lst:
-        if last is not None:
-            next_val = last-1 if descending else last+1
-            if x != next_val:
-                return False
-        last = x
-    return True
-
-
-def findExtremeConsecutive(lst, reverse=True, k=1):
-    s = sorted(lst, reverse=reverse)
-    for ix, x in enumerate(s):
-        mylst = s[ix:ix+k]
-        if isConsecutive(mylst, descending=reverse):
-            return x
-    return s[0]
-
-
 def detect_bios(labels):
     indices = []
-    startComponent = False
+    start_component = False
     startindex = 0
     component_type = 'O'
     for index, tok in enumerate(labels):
         _, token = tok
-        if startComponent == True and token.startswith("B-"):
+        # contiguous component started
+        if start_component == True and token.startswith("B-"):
             endindex = index-1
             indices.append((startindex, endindex, component_type))
             startindex = index
             component_type = token.split(":")[0][2:]
-            startComponent = True
-        elif startComponent == True and token.startswith("O"):
+            start_component = True
+        # component finished
+        elif start_component == True and token.startswith("O"):
             endindex = index-1
             indices.append((startindex, endindex, component_type))
-            startComponent = False
+            start_component = False
+        # component started
         elif token.startswith("B-"):
             component_type = token.split(":")[0][2:]
-            startComponent = True
+            start_component = True
             startindex = index
-        elif token.startswith("I-"):
+    if token.startswith("I-"):
             endindex = index
             indices.append((startindex, endindex, component_type))
     return indices
 
 
-def getTranslationIndices(indices, align):
+def translation_indices(indices, align):
     h = {}
     for y in align.split():
         a, b = list(map(int, y.split("-")))
@@ -84,21 +64,18 @@ def getTranslationIndices(indices, align):
         flat_list = [item for sublist in qq for item in sublist]
         if not flat_list:
             break
-        for myK in range(K, 0, -1):
-            indexStart, indexEnd = findExtremeConsecutive(
-                flat_list, reverse=False, k=K), findExtremeConsecutive(flat_list, reverse=True, k=myK)
-            if len(aligns) > 0:
-                indexEndPrev = aligns[-1][1]
-                indexStartPrev = aligns[-1][0]
-                if indexStart <= indexEndPrev:
-                    sys.stderr.write("DOESN'T WORK OUT %d %d\n" %
-                                     (indexStart, indexEndPrev))
-                    if indexEnd < indexStartPrev:
-                        sys.stderr.write("Li'l non-monotonity\n")
-                        break
-                    indexStart = indexEndPrev+1
-            if indexStart <= indexEnd:
-                break
+        indexStart = flat_list[0]
+        indexEnd = flat_list[-1]
+        if len(aligns) > 0:
+            indexEndPrev = aligns[-1][1]
+            indexStartPrev = aligns[-1][0]
+            if indexStart <= indexEndPrev:
+                sys.stderr.write("DOESN'T WORK OUT %d %d\n" %
+                                    (indexStart, indexEndPrev))
+                if indexEnd < indexStartPrev:
+                    sys.stderr.write("Li'l non-monotonity\n")
+                indexStart = indexEndPrev+1
+
         if indexStart > indexEnd:
             sys.stderr.write(str(aligns))
             sys.stderr.write("ERROR SOMEWHERE: %d %d\n" %
@@ -131,12 +108,12 @@ def process(sentences, sentences_alignments, labels, fout):
         src, trg = sentences[i]
         src_tokens = src.split()
         trg_tokens = trg.split()
-        m = len(src_tokens)
+        len_src_sent = len(src_tokens)
         align = sentences_alignments[i].strip()
-        curLabels = labels[last:last+m]
-        indices = detect_bios(curLabels)
-        last = last+m
-        aligns = sorted(getTranslationIndices(indices, align))
+        curr_labels = labels[last:last+len_src_sent]
+        indices = detect_bios(curr_labels)
+        last = last+len_src_sent
+        aligns = sorted(translation_indices(indices, align))
         prev = 0
         for start, end, component_type in aligns:
             if start > end:

@@ -10,12 +10,15 @@ from src.models.tagger_birnn_cnn_crf import TaggerBiRNNCNNCRF
 class TaggerFactory():
     """TaggerFactory contains wrappers to create various tagger models."""
     @staticmethod
-    def load(checkpoint_fn, gpu=-1):
+    def load(checkpoint_fn, gpu=-1, word_seq_indexer=None):
         if not os.path.isfile(checkpoint_fn):
             raise ValueError('Can''t find tagger in file "%s". Please, run the main script with non-empty \
                              "--save-best-path" param to create it.' % checkpoint_fn)
         tagger = torch.load(checkpoint_fn)
         tagger.gpu = gpu
+
+        if word_seq_indexer:
+            tagger.word_seq_indexer = word_seq_indexer
 
         tagger.word_seq_indexer.gpu = gpu # hotfix
         tagger.tag_seq_indexer.gpu = gpu # hotfix
