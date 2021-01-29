@@ -14,19 +14,6 @@ It uses code from the following third-party repositories:
 - SciPy 1.1.0
 - PyTorch >= 0.4.1
 
-## Evaluation
-
-```python
-python run_tagger.py 2020_11_18_15-15_51_tagger.hdf5 ../data/AM/persuasive_essays/Paragraph_Level/test.dat.abs -d connl-pe
-```
-
 ## Usage
-
-### Train/test
-
-The commands I use to train my model on English and Portuguese embeddings were:
-```python
-cd tagger
-python3 main.py --train ../data/AM/persuasive_essays/Paragraph_Level/train.dat.abs --dev ../data/AM/persuasive_essays/Paragraph_Level/dev.dat.abs --test ../data/AM/persuasive_essays/Paragraph_Level/test.dat.abs --data-io connl-pe --evaluator f1-alpha-match-10 --opt adam --lr 0.001 --save-best yes --patience 20 --rnn-hidden-dim 200 --epoch-num 2 --emb-fn embeddings/wiki.multi.en.vec --emb-dim 300
-```
+Make use of the script files on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/scripts) to build the annotation projection corpus or scripts on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/tagger/scripts) for train and evaluation of the sequence tagging models.
 For a detail explanation on how to use the tagger tool to train/evaluate/save models, please refer to the [Tagger repo](https://github.com/achernodub/targer).
