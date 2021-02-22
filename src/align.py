@@ -24,7 +24,8 @@ if __name__ == "__main__":
     myaligner = SentenceAligner(
         model="bert", token_type="bpe", matching_methods="a", device=args.device)
 
-    save_path = args.corpus_path.stem + "_alignment.txt"
+    save_path = args.corpus_path.with_suffix('').as_posix() + "_alignment.txt"
+    print(f"File will be saved at \'{save_path}\'")
     with open(save_path, "w") as f:
         for l in corpus:
             src_sentence, trg_sentence = l.split(" ||| ")
