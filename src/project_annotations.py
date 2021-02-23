@@ -45,6 +45,20 @@ def detect_bios(labels):
         indices.append((startindex, endindex, component_type))
     return indices
 
+def pad_verbosity(value, trg_aligns):
+    new_value = value
+    val_idx = trg_aligns.index(value)
+    before_aligns = trg_aligns[:val_idx]
+    for i in range(value-1, -1, -1):
+        if i in before_aligns:
+            break
+        new_value -= 1
+    
+    # if new_value != value:
+    #     print(f'{new_value}-{value}')
+    #     print(trg_aligns)
+    # print('OK')
+    return new_value
 
 def translation_indices(indices, alignment):
     alignment_dict = {}
@@ -66,9 +80,14 @@ def translation_indices(indices, alignment):
         if not trg_align_list:
             break
         idx_start = trg_align_list[0]
-        if idx_start - 1 == min(alignment_dict):
-            idx_start -= 1
+
+        # pad portuguese verbosity
+        all_trg_align_list = list(alignment_dict.values())
+        all_trg_align_list = [item for sublist in all_trg_align_list for item in sublist]
+        idx_start = pad_verbosity(idx_start, sorted(all_trg_align_list))
+
         idx_end = trg_align_list[-1]
+        # make ADUs disjoint if alignments are wrong
         if len(aligns) > 0:
             prev_end_idx = aligns[-1][1]
             prev_start_idx = aligns[-1][0]
@@ -113,17 +132,6 @@ def process(sentences, sentences_alignments, labels, fout):
         # '0-0 1-1 2-2' -> [(0, 0), (1, 1), (2, 2)]
         # tuple_align = list(
         #     map(lambda x: tuple(map(int, x.split("-"))), align.split()))
-
-        # src_idx = list(zip(*tuple_align))[0]
-        # trg_idx = list(zip(*tuple_align))[1]
-        # len_trg_sent = len(trg_tokens)
-        # for start, end, component_type in indices:
-        #     for idx in range(min(src_idx), max(trg_idx) + 1):
-        #         if idx not in trg_idx:
-        #             print(trg_tokens[idx])
-
-            # aligned_not_used = [idx for idx in trg_idx if (start <= idx <= end + 1) and idx not in range(start, end+1)]
-            # print([trg_tokens[idx] for idx in aligned_not_used])
 
         last = last+len_src_sent
         aligns = sorted(translation_indices(indices, align))
@@ -178,8 +186,15 @@ if __name__ == "__main__":
                  translations, args.output_path / f'{args.corpus_path.stem}_pt.dat')
 
 # %%
-# translations = open("../data/auxiliary/train_ft_translated.txt").readlines()
+# For testing
+# annotation_dict = {'In addition , sometimes animals from hot countries have to survive in the cold winter of somewhere in Europe .': [('In', 'O'), ('addition', 'O'), (',', 'O'), ('sometimes', 'B-Premise'), ('animals', 'I-Premise'), ('from', 'I-Premise'), ('hot', 'I-Premise'), ('countries', 'I-Premise'), ('have', 'I-Premise'), ('to', 'I-Premise'), ('survive', 'I-Premise'), ('in', 'I-Premise'), ('the', 'I-Premise'), ('cold', 'I-Premise'), ('winter', 'I-Premise'), ('of', 'I-Premise'), ('somewhere', 'I-Premise'), ('in', 'I-Premise'), ('Europe', 'I-Premise'), ('.', 'O')]}
+# translations = open("../data/auxiliary/dev_ft_translated.txt").readlines()
 # alignments = open(
-#     "../data/auxiliary/train_ft_translated_alignment.txt").readlines()
-# create_conll("../data/en_pe/train.dat",
+#     "../data/auxiliary/dev_ft_translated_alignment.txt").readlines()
+
+# translations = ['In addition , sometimes animals from hot countries have to survive in the cold winter of somewhere in Europe . ||| Além disso , por vezes , animais de países quentes têm de sobreviver no frio inverno de algum lugar na Europa .']
+# alignments = ['1-1 2-2 3-4 4-6 5-7 6-9 7-8 8-10 9-11 10-12 11-13 13-14 14-15 15-16 16-17 16-18 17-19 18-20 19-21']
+# create_conll("../data/en_pe/dev.dat",
 #              alignments, translations, "../TO_REMOVE.dat")
+
+# %%
