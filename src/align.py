@@ -2,6 +2,8 @@
 import argparse
 import codecs
 from pathlib import Path
+from tqdm import tqdm
+
 import torch
 
 # import nltk
@@ -9,6 +11,15 @@ import torch
 from simalign import SentenceAligner
 
 # nltk.download('punkt')
+
+
+def words_not_aligned(src_sentence, alignments):
+    src_sentence = src_sentence.split()
+    src_alignments = list(zip(*alignments))[0]
+    indices_not_aligned = [i for i in range(
+        len(src_sentence)) if i not in src_alignments]
+    return [src_sentence[i] for i in indices_not_aligned]
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Align source and target file separated by \'|||\' using SimAlign.",
@@ -22,15 +33,28 @@ if __name__ == "__main__":
 
     # Instancing model
     myaligner = SentenceAligner(
-        model="bert", token_type="bpe", matching_methods="a", device=args.device)
+        model="bert", token_type="bpe", matching_methods="m", device=args.device)
 
     save_path = args.corpus_path.with_suffix('').as_posix() + "_alignment.txt"
     print(f"File will be saved at \'{save_path}\'")
+    all_align = 0
+    miss_align = 0
+    num_miss_align = 0
+    total = 0
     with open(save_path, "w") as f:
-        for l in corpus:
+        for l in tqdm(corpus):
             src_sentence, trg_sentence = l.split(" ||| ")
-            alignments = myaligner.get_word_aligns(src_sentence.strip(), trg_sentence.strip())
-            # alignments = myaligner.get_word_aligns(word_tokenize(src_sentence.strip()[0]), word_tokenize(trg_sentence.strip()[0]))
+            alignments = myaligner.get_word_aligns(
+                src_sentence.strip(), trg_sentence.strip())
             alignments = list(alignments.values())[0]
+            not_aligned = words_not_aligned(src_sentence, alignments)
+            if not_aligned:
+               miss_align += 1
+               num_miss_align += len(not_aligned)
+            else:
+               all_align += 1
+            total += 1
             f.write(' '.join('{}-{}'.format(i, j)
                              for (i, j) in alignments) + '\n')
+        print(f'All align: {all_align}/{total} - {round((all_align / total) * 100, 2)}\%')
+        print(f'Miss align: {miss_align}/{total} - {round((miss_align / total) * 100, 2)}\%; Averaging {round(num_miss_align / miss_align)} miss aligned tokens per miss aligned instance')

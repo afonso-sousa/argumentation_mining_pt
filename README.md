@@ -55,6 +55,8 @@ To execute the alignment script, the following packages are required:
 - PyTorch
 - Scikit-learn
 - Transformers 3.1.0 (later versions might throw an error)
+- NetworkX
+- tqdm
 
 ### Annotation Projection
 Finally, project the annotations.
