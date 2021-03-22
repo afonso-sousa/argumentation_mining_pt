@@ -40,10 +40,11 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 
-def chunks_list(lst, n):
+def chunks_list(paragraph, threshold):
+    text_sentences = free_text_to_sentences(paragraph)
     l = []
-    for i in range(0, len(lst), n):
-        l.append(lst[i:i + n])
+    for i in range(0, len(text_sentences), threshold):
+        l.append(text_sentences[i:i + threshold])
     return l
 
 
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("corpus_path", type=Path)
     parser.add_argument("--src_lang", default='en', type=str)
     parser.add_argument("--trg_lang", default='pt', type=str)
-    parser.add_argument("--chunk_size", default=100, type=int)
+    parser.add_argument("--threshold", default=2, type=int)
     args = parser.parse_args()
     args.device = torch.device('cuda')
 
@@ -74,22 +75,40 @@ if __name__ == "__main__":
         args.device).half()  # fp16 should save memory
 
     print('Tokenizing free text into sentences')
-    with open(args.corpus_path, "r") as text_file:
-        file_contents = text_file.read()
-        text_sentences = [free_text_to_sentences(paragraph) for paragraph in file_contents.split('\t')]
+    # text_sentences = open(args.corpus_path).readlines()
+    text_sentences = nltk.data.load(args.corpus_path.as_posix())
 
-    text_sentences = [sentence for paragraph in text_sentences for sentence in paragraph]
+    # with open(args.corpus_path, "r") as text_file:
+    #     file_contents = text_file.read()
+    #     text_sentences = [free_text_to_sentences(paragraph) for paragraph in file_contents.split('\t')]
+
+    # text_sentences = [sentence for paragraph in text_sentences for sentence in paragraph]
 
     file_name = args.corpus_path.with_suffix("").as_posix() + "_translated.txt"
 
-    chunks = chunks_list(text_sentences, args.chunk_size)
-    print('Translating sentences')
-    for i, chunk in enumerate(chunks):
-        translated_chunk = translate(
-            chunk, target_model, target_tokenizer, language=args.trg_lang, device=args.device)
+    # chunks = chunks_list(text_sentences, args.chunk_size)
+    paragraphs = text_sentences.split("\t")
 
-        # split ponctuation
-        translated_chunk = [' '.join(word_tokenize(sentence))
-                            for sentence in translated_chunk]
-        align_chunks(chunk, translated_chunk, file_path=file_name)
-        print("Chunk done [{}/{}].".format(i + 1, len(list(chunks))))
+    # print(chunks[1])
+    # sys.exit(1)
+
+    print('Translating sentences')
+    for i, parag in enumerate(paragraphs):
+        for chunk in chunks_list(parag, args.threshold):
+            # chunk = ' '.join(chunk)
+
+            translated_chunk = translate(
+                chunk, target_model, target_tokenizer, language=args.trg_lang, device=args.device)
+
+            # print(chunk)
+            # print(translated_chunk)
+            # sys.exit(1)
+
+            # chunk = [' '.join(word_tokenize(sentence))
+            #                     for sentence in chunk]
+            # translated_chunk = [' '.join(word_tokenize(sentence))
+            #                     for sentence in translated_chunk]
+
+
+            align_chunks(chunk, translated_chunk, file_path=file_name)
+        print("Paragraph done [{}/{}].".format(i + 1, len(list(paragraphs))))

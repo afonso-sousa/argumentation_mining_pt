@@ -168,16 +168,23 @@ def process(sentences, sentences_alignments, labels, fout, pad_verbosity):
             idx = printout(idx, after_adu, fout)
     return count
 
-def create_conll(corpus_path, alignments, translations, output_path, pad_verbosity=True):
+def create_conll(corpus_path, alignments, translations, output_path, pad_verbosity=True, reverse=False):
     annotation_dict = read_doc(corpus_path)
     count = (0, 0, 0)
+    total_sent = 0
     for paragraph, labels in annotation_dict.items():
+        # print(paragraph)
         sentences = []
         sentences_alignments = []
         sentences_in_paragraph = sent_tokenize(paragraph)
+        print(len(sentences_in_paragraph))
+        total_sent += len(sentences_in_paragraph)
         seen_sentences = []
         for idx, trans in enumerate(translations):
-            src, trg = trans.split(" ||| ")
+            if not reverse:
+                src, trg = trans.split(" ||| ")
+            else:
+                trg, src = trans.split(" ||| ")
             if src.strip() in sentences_in_paragraph and not src.strip() in seen_sentences:
                 sentences.append((src, trg))
                 sentences_alignments.append(alignments[idx])
@@ -188,6 +195,7 @@ def create_conll(corpus_path, alignments, translations, output_path, pad_verbosi
             output_file.write("\n")
     if pad_verbosity:
         print(f'Single: {count[0]}, Multi: {count[1]}, Total: {count[2]}')
+    print(f'# sentences: {total_sent}')
 
 # %%
 if __name__ == "__main__":
@@ -196,16 +204,25 @@ if __name__ == "__main__":
     parser.add_argument("corpus_path", type=Path)
     parser.add_argument("translation_path", type=Path)
     parser.add_argument("alignment_path", type=Path)
-    parser.add_argument("--output_path", type=Path, default=".")
-    parser.add_argument('--pad_verbosity', action='store_false')
+    parser.add_argument("--output_dir", type=Path, default=".")
+    parser.add_argument('--pad_verbosity', action='store_true', default=False)
+    parser.add_argument('--reverse', action='store_true', default=False)
     args = parser.parse_args()
-    args.output_path.mkdir(parents=True, exist_ok=True)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
 
     alignments = open(args.alignment_path).readlines()
     translations = open(args.translation_path).readlines()
 
+    print(f'Corpus path: {args.corpus_path}')
+    print(f'Length alignments: {len(alignments)}')
+    print(f'Length translations: {len(translations)}')
+    output_path = args.output_dir / f'{args.corpus_path.stem}.dat'
+    print(f'Output path: {output_path}')
+    print(f'Pad Verbosity: {args.pad_verbosity}')
+    print(f'Reverse: {args.reverse}')
+
     create_conll(args.corpus_path, alignments,
-                 translations, args.output_path / f'{args.corpus_path.stem}_pt.dat', args.pad_verbosity)
+                 translations, output_path, args.pad_verbosity, args.reverse)
 
 # %%
 # Single example test
@@ -217,12 +234,22 @@ create_conll("../data/en_pe/dev.dat",
              alignments, translations, "../TO_REMOVE.dat")
 """
 # %%
-# Dev creation test
-# """
-translations = open("../data/auxiliary/dev_ft_translated.txt").readlines()
+# Creation test
+"""
+split = 'train'
+translations = open(f'../data/auxiliary/{split}_ft_translated.txt').readlines()
 alignments = open(
-    "../data/auxiliary/dev_ft_translated_alignment.txt").readlines()
-create_conll("../data/en_pe/dev.dat", alignments,
+    f'../data/auxiliary/{split}_ft_translated_alignment.txt').readlines()
+create_conll(f'../data/en_pe/{split}.dat', alignments,
                  translations, "../TO_REMOVE.dat", True)
-# """
+"""
+
+# %%
+"""
+translations = open("../data/auxiliary/train_ft_translated.txt").readlines()
+alignments = open(
+    "../data/auxiliary/train_ft_translated_alignment_src-pt.txt").readlines()
+create_conll("../data/pt_pe/train_pt.dat", alignments,
+                 translations, "../TO_REMOVE.dat", pad_verbosity=True, reverse=True)
+"""
 # %%

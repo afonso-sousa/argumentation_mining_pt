@@ -25,6 +25,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Align source and target file separated by \'|||\' using SimAlign.",
                                      epilog="example: python3 align.py path/to/corpus")
     parser.add_argument("corpus_path", type=Path)
+    parser.add_argument("--src_lang", default='en', type=str)
     args = parser.parse_args()
 
     args.device = torch.device('cuda')
@@ -35,7 +36,10 @@ if __name__ == "__main__":
     myaligner = SentenceAligner(
         model="bert", token_type="bpe", matching_methods="m", device=args.device)
 
-    save_path = args.corpus_path.with_suffix('').as_posix() + "_alignment.txt"
+    if args.src_lang == 'en':
+        save_path = args.corpus_path.with_suffix('').as_posix() + "_alignment.txt"
+    else:
+        save_path = args.corpus_path.with_suffix('').as_posix() + "_alignment_src-pt.txt"
     print(f"File will be saved at \'{save_path}\'")
     all_align = 0
     miss_align = 0
@@ -43,7 +47,11 @@ if __name__ == "__main__":
     total = 0
     with open(save_path, "w") as f:
         for l in tqdm(corpus):
-            src_sentence, trg_sentence = l.split(" ||| ")
+            if args.src_lang == 'en':
+                src_sentence, trg_sentence = l.split(" ||| ")
+            else:
+                trg_sentence, src_sentence = l.split(" ||| ")
+
             alignments = myaligner.get_word_aligns(
                 src_sentence.strip(), trg_sentence.strip())
             alignments = list(alignments.values())[0]
