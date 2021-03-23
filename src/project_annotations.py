@@ -16,7 +16,14 @@ from utils import read_doc
 # nltk.download('punkt')
 
 
+def free_text_to_sentences(text):
+    tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+    return tokenizer.tokenize(text)
+
+
 def detect_bios(labels):
+    if labels == []:
+        return []
     indices = []
     start_component = False
     startindex = 0
@@ -45,6 +52,7 @@ def detect_bios(labels):
         indices.append((startindex, endindex, component_type))
     return indices
 
+
 def pad_verbosity(value, trg_aligns, right=False):
     new_value = value
     val_idx = trg_aligns.index(value)
@@ -59,9 +67,9 @@ def pad_verbosity(value, trg_aligns, right=False):
             break
         if right:
             new_value += 1
-        else:    
+        else:
             new_value -= 1
-    
+
     count_simple = 0
     count_multi = 0
     if new_value != value:
@@ -71,6 +79,7 @@ def pad_verbosity(value, trg_aligns, right=False):
             count_multi = 1
     print('OK')
     return new_value, (count_simple, count_multi)
+
 
 def translation_indices(indices, alignment, pad_verb):
     alignment_dict = {}
@@ -98,14 +107,14 @@ def translation_indices(indices, alignment, pad_verb):
         # pad portuguese verbosity
         if pad_verb:
             all_trg_align_list = list(alignment_dict.values())
-            all_trg_align_list = [item for sublist in all_trg_align_list for item in sublist]
+            all_trg_align_list = [
+                item for sublist in all_trg_align_list for item in sublist]
             idx_start, c = pad_verbosity(idx_start, sorted(all_trg_align_list))
             count = (count[0] + c[0], count[1] + c[1], count[2])
 
         # make ADUs disjoint if alignments are wrong
         if len(aligns) > 0:
             prev_end_idx = aligns[-1][1]
-            prev_start_idx = aligns[-1][0]
             if idx_start <= prev_end_idx:
                 idx_start = prev_end_idx+1
 
@@ -116,16 +125,14 @@ def translation_indices(indices, alignment, pad_verb):
 def printout(idx, sequence, output_path, component_type="O"):
     tmp = idx
     with open(output_path, 'a+') as output_file:
-        for itoken, token in enumerate(sequence):
+        for i, token in enumerate(sequence):
             if component_type != "O":
-                if itoken == 0:
+                if i == 0:
                     pre = "B-"
                 else:
                     pre = "I-"
             else:
                 pre = ""
-            if not component_type:
-                component_type = "O"
             output_file.write(f'{tmp}\t{token}\t{pre}{component_type}\n')
             tmp += 1
     return tmp
@@ -155,47 +162,82 @@ def process(sentences, sentences_alignments, labels, fout, pad_verbosity):
         count = (count[0] + c[0], count[1] + c[1], count[2] + c[2])
         prev = 0
         for start, end, component_type in aligns:
-            if start > end:
+            if start == 78:
+                print('-----', start, end, component_type)
+                sys.exit(1)
+            if start >= end:
                 continue
             before_adu = trg_tokens[prev:start]
-            adu = trg_tokens[start:end+1]
             if before_adu != []:
                 idx = printout(idx, before_adu, fout)
+
+            adu = trg_tokens[start:end+1]
             idx = printout(idx, adu, fout, component_type)
+
             prev = end+1
         after_adu = trg_tokens[prev:]
         if after_adu != []:
             idx = printout(idx, after_adu, fout)
     return count
 
+
+def count_sent_translation_parag(translations, position):
+    for i, line in enumerate(translations[position:]):
+        if line == '\n':
+            return i
+
+
 def create_conll(corpus_path, alignments, translations, output_path, pad_verbosity=True, reverse=False):
     annotation_dict = read_doc(corpus_path)
     count = (0, 0, 0)
     total_sent = 0
-    for paragraph, labels in annotation_dict.items():
-        # print(paragraph)
-        sentences = []
+    curr_idx = 0
+
+    for paragraph, labels in annotation_dict:
         sentences_alignments = []
-        sentences_in_paragraph = sent_tokenize(paragraph)
-        print(len(sentences_in_paragraph))
-        total_sent += len(sentences_in_paragraph)
-        seen_sentences = []
-        for idx, trans in enumerate(translations):
-            if not reverse:
-                src, trg = trans.split(" ||| ")
-            else:
-                trg, src = trans.split(" ||| ")
-            if src.strip() in sentences_in_paragraph and not src.strip() in seen_sentences:
-                sentences.append((src, trg))
-                sentences_alignments.append(alignments[idx])
-                seen_sentences.append(src.strip())
-        c = process(sentences, sentences_alignments, labels, output_path, pad_verbosity)
+        # sentences_in_paragraph = free_text_to_sentences(paragraph)
+        num_sentences = count_sent_translation_parag(translations, curr_idx)
+        print(f'Index range: {curr_idx} - {curr_idx+num_sentences}')
+        print(f'Num sentences: {num_sentences}')
+        if not reverse:
+            sentences = [tuple(trans.split(" ||| "))
+                         for trans in translations[curr_idx:curr_idx+num_sentences]]
+        else:
+            sentences = [tuple(trans.split(" ||| "))[::-1]
+                         for trans in translations[curr_idx:curr_idx+num_sentences]]
+        sentences_alignments = alignments[curr_idx:curr_idx+num_sentences]
+
+        """
+        for s in list(zip(*sentences))[0]:
+            if s.strip() not in sentences_in_paragraph:
+                print(s)
+                print(sentences_in_paragraph)
+                sys.exit(1)
+        """
+
+        if sentences == []:
+            print(paragraph)
+            sys.exit(1)
+
+        """
+        with open("testing.txt", 'a+') as test:
+            for s in list(zip(*sentences))[1]:
+                test.write(s)
+                test.write("\n")
+            test.write("\n")
+        """
+
+        c = process(sentences, sentences_alignments,
+                    labels, output_path, pad_verbosity)
         count = (count[0] + c[0], count[1] + c[1], count[2] + c[2])
+        total_sent += num_sentences
+        curr_idx += num_sentences + 1
         with open(output_path, 'a+') as output_file:
             output_file.write("\n")
     if pad_verbosity:
         print(f'Single: {count[0]}, Multi: {count[1]}, Total: {count[2]}')
     print(f'# sentences: {total_sent}')
+
 
 # %%
 if __name__ == "__main__":
@@ -237,11 +279,13 @@ create_conll("../data/en_pe/dev.dat",
 # Creation test
 """
 split = 'train'
-translations = open(f'../data/auxiliary/{split}_ft_translated.txt').readlines()
+pad_verb = True
+reverse = False
+translations = open(f'../data/auxiliary/{split}/{split}_ft_translated.txt').readlines()
 alignments = open(
-    f'../data/auxiliary/{split}_ft_translated_alignment.txt').readlines()
-create_conll(f'../data/en_pe/{split}.dat', alignments,
-                 translations, "../TO_REMOVE.dat", True)
+    f'../data/auxiliary/{split}/{split}_ft_translated_alignment{"_src-pt" if reverse else ""}.txt').readlines()
+create_conll(f'../data/{"pt_pe" if reverse else "en_pe"}/{split}.dat', alignments,
+                 translations, "../TO_REMOVE.dat", pad_verb, reverse)
 """
 
 # %%
@@ -252,4 +296,43 @@ alignments = open(
 create_conll("../data/pt_pe/train_pt.dat", alignments,
                  translations, "../TO_REMOVE.dat", pad_verbosity=True, reverse=True)
 """
+# %%
+"""
+gen_corpus = open('../TO_REMOVE.dat').readlines()
+gold_standard = open(f'../data/en_pe/{split}.dat').readlines()
+
+print(f'Length Generated Corpus: {len(gen_corpus)}')
+print(f'Length Gold Standard: {len(gold_standard)}')
+"""
+
+# %%
+"""
+correct = 0
+incorrect = 0
+total = 0
+gold_idx = 0
+for idx, row in enumerate(gold_standard):
+    total += 1
+    gold = row.strip().split('\t')
+    gen = gen_corpus[gold_idx].strip().split('\t')
+
+    if len(gold) == 3:
+        gold[2] = gold[2].split(":")[0] # take out relation
+    
+    if gen == gold:
+        # completely equal
+        correct += 1
+    else:
+        if gold[:-1] == gen[:-1]:
+            # same token, different labels
+            incorrect += 1
+        else:
+            print(idx)
+            sys.exit(1)
+    gold_idx += 1
+print(f'Correct: {correct}')
+print(f'Incorrect: {incorrect}')
+print(f'Total: {total}')
+"""
+
 # %%

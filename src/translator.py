@@ -1,11 +1,12 @@
 import argparse
+import sys
 from pathlib import Path
 
 import nltk.data
 import torch
 from nltk.tokenize import word_tokenize
 from transformers import MarianMTModel, MarianTokenizer
-import sys
+
 # nltk.download('punkt')
 
 
@@ -54,6 +55,9 @@ def align_chunks(chunk, translated_chunk, file_path=None):
         for i in range(len(chunk)):
             f.write("{:s} ||| {:s}\n".format(chunk[i], translated_chunk[i]))
 
+def print_tab(file_path):
+    with open(file_path, 'a+') as f:
+        f.write("\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Translate free text from English to Romance language.",
@@ -75,40 +79,21 @@ if __name__ == "__main__":
         args.device).half()  # fp16 should save memory
 
     print('Tokenizing free text into sentences')
-    # text_sentences = open(args.corpus_path).readlines()
     text_sentences = nltk.data.load(args.corpus_path.as_posix())
-
-    # with open(args.corpus_path, "r") as text_file:
-    #     file_contents = text_file.read()
-    #     text_sentences = [free_text_to_sentences(paragraph) for paragraph in file_contents.split('\t')]
-
-    # text_sentences = [sentence for paragraph in text_sentences for sentence in paragraph]
 
     file_name = args.corpus_path.with_suffix("").as_posix() + "_translated.txt"
 
-    # chunks = chunks_list(text_sentences, args.chunk_size)
     paragraphs = text_sentences.split("\t")
-
-    # print(chunks[1])
-    # sys.exit(1)
 
     print('Translating sentences')
     for i, parag in enumerate(paragraphs):
         for chunk in chunks_list(parag, args.threshold):
-            # chunk = ' '.join(chunk)
-
             translated_chunk = translate(
                 chunk, target_model, target_tokenizer, language=args.trg_lang, device=args.device)
 
-            # print(chunk)
-            # print(translated_chunk)
-            # sys.exit(1)
-
-            # chunk = [' '.join(word_tokenize(sentence))
-            #                     for sentence in chunk]
-            # translated_chunk = [' '.join(word_tokenize(sentence))
-            #                     for sentence in translated_chunk]
-
+            translated_chunk = [' '.join(word_tokenize(sentence))
+                                for sentence in translated_chunk]
 
             align_chunks(chunk, translated_chunk, file_path=file_name)
+        print_tab(file_name)
         print("Paragraph done [{}/{}].".format(i + 1, len(list(paragraphs))))

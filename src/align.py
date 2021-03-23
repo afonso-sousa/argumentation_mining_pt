@@ -47,6 +47,9 @@ if __name__ == "__main__":
     total = 0
     with open(save_path, "w") as f:
         for l in tqdm(corpus):
+            if l == '\n':
+                f.write('\n')
+                continue
             if args.src_lang == 'en':
                 src_sentence, trg_sentence = l.split(" ||| ")
             else:
