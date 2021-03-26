@@ -6,14 +6,17 @@ import sys
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate generated corpus against gold standard.",
                                      epilog="example: python3 eval_en_from_pt.py path/to/corpus path/to/gold")
-    parser.add_argument("generated_corpus_dir", type=Path)
     parser.add_argument("gold_standard_dir", type=Path)
+    parser.add_argument("generated_corpus_dir", type=Path)
+    parser.add_argument("--set_split", default='train')
     args = parser.parse_args()
 
-    gen_corpus = open(args.generated_corpus_dir / 'dev.dat').readlines()
-    gold_standard = open(args.gold_standard_dir / 'dev.dat').readlines()
-    print(f'Length Generated Corpus: {len(gen_corpus)}')
+    print(args.gold_standard_dir / f'{args.set_split}.dat')
+    print(args.generated_corpus_dir / f'{args.set_split}.dat')
+    gold_standard = open(args.gold_standard_dir / f'{args.set_split}.dat').readlines()
+    gen_corpus = open(args.generated_corpus_dir / f'{args.set_split}.dat').readlines()
     print(f'Length Gold Standard: {len(gold_standard)}')
+    print(f'Length Generated Corpus: {len(gen_corpus)}')
 
     """
     # sanity check
@@ -60,7 +63,7 @@ if __name__ == "__main__":
     print(f'Incorrect by skip: {sum(incorrect_by_skip.values())}')
     """
 
-    tag_list = ['B-Premise', 'I-Premise', 'B-MajorClaim', 'I-MajorClaim', 'B-Claim', 'I-Claim', 'O']
+    tag_list = ['B-Claim', 'B-MajorClaim', 'B-Premise', 'I-Claim', 'I-MajorClaim', 'I-Premise', 'O']
 
     def get_M_F1_msg(F1):
             msg = '\nF1 scores\n'
@@ -87,8 +90,10 @@ if __name__ == "__main__":
     FN = {tag: 0 for tag in tag_list}
     F1 = {tag: 0 for tag in tag_list}
     for gold_seq, gen_seq in zip(gold_standard, gen_corpus):
-        gold_tag_sequence = gen_seq.strip().split('\t')[-1]
-        gen_tag_sequence = gold_seq.strip().split('\t')[-1]
+        if gold_seq == '\n':
+            continue
+        gold_tag_sequence = gold_seq.strip().split('\t')[-1]
+        gen_tag_sequence = gen_seq.strip().split('\t')[-1]
 
         gold_tag_sequence = gold_tag_sequence.split(":")[0] # remove relation
 

@@ -4,9 +4,9 @@ from pathlib import Path
 import nltk.data
 from nltk import word_tokenize
 
-split = 'train'
+split = 'dev'
 # Load data
-nltk_text = nltk.data.load(f'../data/auxiliary/{split}_ft.txt')
+nltk_text = nltk.data.load(f'../data/auxiliary/{split}/{split}_ft.txt')
 
 print('# tokens: {}'.format(len(nltk_text)))
 
