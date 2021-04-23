@@ -4,7 +4,7 @@ from pathlib import Path
 import nltk.data
 from nltk import word_tokenize
 
-split = 'dev'
+split = 'test'
 # Load data
 nltk_text = nltk.data.load(f'../data/auxiliary/{split}/{split}_ft.txt')
 
@@ -18,6 +18,23 @@ sentences = tokenizer.tokenize(nltk_text)
 print('# sentences: {}'.format(len(sentences)))
 
 paragraphs = nltk_text.split("\t")
+print('# paragraphs: {}'.format(len(paragraphs)))
+
+# %%
+import utils
+paragraphs = utils.read_doc(f"../data/pt_pe/{split}.dat")
+text = "\t".join(list(zip(*paragraphs))[0])
+
+print('# tokens: {}'.format(len(text)))
+
+tokens = word_tokenize(text)
+print('Vocab length: {}'.format(len(tokens)))
+
+tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+sentences = tokenizer.tokenize(text)
+print('# sentences: {}'.format(len(sentences)))
+
+paragraphs = text.split("\t")
 print('# paragraphs: {}'.format(len(paragraphs)))
 
 # %%

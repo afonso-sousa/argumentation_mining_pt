@@ -207,26 +207,6 @@ def create_conll(corpus_path, alignments, translations, output_path, pad_verbosi
                          for trans in translations[curr_idx:curr_idx+num_sentences]]
         sentences_alignments = alignments[curr_idx:curr_idx+num_sentences]
 
-        """
-        for s in list(zip(*sentences))[0]:
-            if s.strip() not in sentences_in_paragraph:
-                print(s)
-                print(sentences_in_paragraph)
-                sys.exit(1)
-        """
-
-        if sentences == []:
-            print(paragraph)
-            sys.exit(1)
-
-        """
-        with open("testing.txt", 'a+') as test:
-            for s in list(zip(*sentences))[1]:
-                test.write(s)
-                test.write("\n")
-            test.write("\n")
-        """
-
         c = process(sentences, sentences_alignments,
                     labels, output_path, pad_verbosity)
         count = (count[0] + c[0], count[1] + c[1], count[2] + c[2])
@@ -269,11 +249,15 @@ if __name__ == "__main__":
 # %%
 # Single example test
 """
-annotation_dict = {'In addition , sometimes animals from hot countries have to survive in the cold winter of somewhere in Europe .': [('In', 'O'), ('addition', 'O'), (',', 'O'), ('sometimes', 'B-Premise'), ('animals', 'I-Premise'), ('from', 'I-Premise'), ('hot', 'I-Premise'), ('countries', 'I-Premise'), ('have', 'I-Premise'), ('to', 'I-Premise'), ('survive', 'I-Premise'), ('in', 'I-Premise'), ('the', 'I-Premise'), ('cold', 'I-Premise'), ('winter', 'I-Premise'), ('of', 'I-Premise'), ('somewhere', 'I-Premise'), ('in', 'I-Premise'), ('Europe', 'I-Premise'), ('.', 'O')]}
-translations = ['In addition , sometimes animals from hot countries have to survive in the cold winter of somewhere in Europe . ||| Além disso , por vezes , animais de países quentes têm de sobreviver no frio inverno de algum lugar na Europa .']
-alignments = ['1-1 2-2 3-4 4-6 5-7 6-9 7-8 8-10 9-11 10-12 11-13 13-14 14-15 15-16 16-17 16-18 17-19 18-20 19-21']
+# replace line 191 with this to test
+annotation_dict = [('To sum up , technology has helped us to have more comfortable life .', [('To', 'O'),
+    ('sum', 'O'), ('up', 'O'), (',', 'O'), ('technology', 'B-MajorClaim'), ('has', 'I-MajorClaim'),
+    ('helped', 'I-MajorClaim'), ('us', 'I-MajorClaim'), ('to', 'I-MajorClaim'), ('have', 'I-MajorClaim'),
+    ('more', 'I-MajorClaim'), ('confortable', 'I-MajorClaim'), ('life', 'I-MajorClaim'), ('.', 'O')])]
+translations = ['To sum up , technology has helped us to have more comfortable life . ||| Resumindo , a tecnologia nos ajudou a ter uma vida mais confotável .', '\n']
+alignments = ['0-2 1-0 2-0 3-1 4-3 5-5 6-5 7-4 8-6 9-7 10-10 11-11 12-9 13-12', '\n']
 create_conll("../data/en_pe/dev.dat",
-             alignments, translations, "../TO_REMOVE.dat")
+             alignments, translations, "../TO_REMOVE.dat", True, False)
 """
 # %%
 # Creation test
