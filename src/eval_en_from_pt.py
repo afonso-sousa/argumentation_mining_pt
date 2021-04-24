@@ -89,7 +89,7 @@ if __name__ == "__main__":
             FP = add_to_dict(FP, gen_tag_sequence, 1)
     # Calculate F1 for each tag
     for tag in tag_list:
-        F1[tag] = (2 * TP[tag] / max(2 * TP[tag] + FP[tag] + FN[tag], 1)) * 100
+        F1[tag] = (2 * TP[tag] / max(2 * TP[tag] + FP[tag] + FN[tag], 1)) # * 100
     # Calculate Macro-F1 score and prepare the message
     print(build_msg(F1, TP, FP, FN))
 
