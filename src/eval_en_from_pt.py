@@ -145,3 +145,21 @@ print(f'Skip sentences: {skipped_sents}')
 print(f'Incorrect by skip: {sum(incorrect_by_skip.values())}')
 """
 # %%
+"""
+gold_standard = open('../data/en_pe/train.dat').readlines()
+
+o = 0
+ip = 0
+for idx, row in enumerate(gold_standard):
+    gold = row.strip().split('\t')
+
+    if len(gold) == 3:
+        gold[2] = gold[2].split(":")[0] # take out relation
+        if gold[2] == "O":
+            o += 1
+        if gold[2] == "I-Premise":
+            ip += 1
+print(o)
+print(ip)
+"""
+# %%
