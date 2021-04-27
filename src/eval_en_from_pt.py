@@ -96,10 +96,9 @@ if __name__ == "__main__":
 # %%
 """
 # sanity check
-gold_standard = open('../data/en_pe/train.dat').readlines()
-gen_corpus = open('../data/en_from_pt_pe/train.dat').readlines()
-print(f'Length Gold S        gold_train = open(args.gold_standard_dir / 'train.dat').readlines()
-tandard: {len(gold_standard)}')
+gold_standard = open('data/en_pe/train.dat').readlines()
+gen_corpus = open('data/en_from_pt_pe_no_pad/train.dat').readlines()
+print(f'Length Gold Standard: {len(gold_standard)}')
 print(f'Length Generated Corpus: {len(gen_corpus)}')
 
 correct = 0
@@ -144,6 +143,7 @@ print(f'Total: {total}')
 print(f'Skip sentences: {skipped_sents}')
 print(f'Incorrect by skip: {sum(incorrect_by_skip.values())}')
 """
+
 # %%
 """
 gold_standard = open('../data/en_pe/train.dat').readlines()
