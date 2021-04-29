@@ -4,15 +4,33 @@ from pathlib import Path
 import nltk.data
 from nltk import word_tokenize
 
+
 split = 'test'
-# Load data
+gold_standard_dir = Path("../data/pt_pe_pad")
+
+if split == 'all':
+    gold_train = open(gold_standard_dir / 'train.dat').readlines()
+    gold_dev = open(gold_standard_dir / 'dev.dat').readlines()
+    gold_test = open(gold_standard_dir / 'test.dat').readlines()
+    gold_standard = []
+    for split in [gold_train, gold_dev, gold_test]:
+        gold_standard.extend(split)
+else:
+    gold_standard = open(gold_standard_dir / f'{split}.dat').readlines()
+
+tokens = []
+for gold_seq in gold_standard:
+        if gold_seq == '\n':
+            continue
+        tokens.append(gold_seq.strip().split('\t')[1])
+
+print('# tokens: {}'.format(len(tokens)))
+
+print('Vocab length: {}'.format(len(set(tokens))))
+
+# %%
 nltk_text = nltk.data.load(f'../data/auxiliary/{split}/{split}_ft.txt')
-
-print('# tokens: {}'.format(len(nltk_text)))
-
 tokens = word_tokenize(nltk_text)
-print('Vocab length: {}'.format(len(tokens)))
-
 tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 sentences = tokenizer.tokenize(nltk_text)
 print('# sentences: {}'.format(len(sentences)))
@@ -54,4 +72,33 @@ for line in conll:
         paragraphs += 1
 print('# paragraphs: {}'.format(paragraphs))
 
+# %%
+gold_standard_dir = Path("../data/en_pe")
+gold_train = open(gold_standard_dir / 'train.dat').readlines()
+gold_dev = open(gold_standard_dir / 'dev.dat').readlines()
+gold_test = open(gold_standard_dir / 'test.dat').readlines()
+gold_standard = []
+for split in [gold_train, gold_dev, gold_test]:
+    gold_standard.extend(split)
+
+# %%
+tokens = []
+for gold_seq in gold_standard:
+        if gold_seq == '\n':
+            continue
+        tokens.append(gold_seq.strip().split('\t')[1])
+
+
+# %%
+print('# tokens: {}'.format(len(gold_standard)))
+
+tokens = word_tokenize(gold_standard)
+print('Vocab length: {}'.format(len(tokens)))
+
+tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+sentences = tokenizer.tokenize(gold_standard)
+print('# sentences: {}'.format(len(sentences)))
+
+paragraphs = gold_standard.split("\t")
+print('# paragraphs: {}'.format(len(paragraphs)))
 # %%
