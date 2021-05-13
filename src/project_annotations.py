@@ -28,28 +28,51 @@ def detect_bios(labels):
     start_component = False
     startindex = 0
     component_type = 'O'
+    rel_idx = '-1'
+    rel_type = 'none'
+
     for index, tok in enumerate(labels):
         _, token = tok
         # contiguous component started
         if start_component == True and token.startswith("B-"):
             endindex = index-1
-            indices.append((startindex, endindex, component_type))
+            indices.append((startindex, endindex, component_type, rel_idx, rel_type))
             startindex = index
-            component_type = token.split(":")[0][2:]
+            all_cols = token.split(":")
+            component_type = all_cols[0][2:]
+            if len(all_cols) == 1:
+                rel_idx = '-1'
+                rel_type = 'none'
+            elif len(all_cols) == 2:
+                rel_idx = '-1'
+                rel_type = all_cols[1]
+            elif len(all_cols) == 3:
+                rel_idx = all_cols[1]
+                rel_type = all_cols[2]
             start_component = True
         # component finished
         elif start_component == True and token.startswith("O"):
             endindex = index-1
-            indices.append((startindex, endindex, component_type))
+            indices.append((startindex, endindex, component_type, rel_idx, rel_type))
             start_component = False
         # component started
         elif token.startswith("B-"):
-            component_type = token.split(":")[0][2:]
+            all_cols = token.split(":")
+            component_type = all_cols[0][2:]
+            if len(all_cols) == 1:
+                rel_idx = '-1'
+                rel_type = 'none'
+            elif len(all_cols) == 2:
+                rel_idx = '-1'
+                rel_type = all_cols[1]
+            elif len(all_cols) == 3:
+                rel_idx = all_cols[1]
+                rel_type = all_cols[2]
             start_component = True
             startindex = index
     if token.startswith("I-"):
         endindex = index
-        indices.append((startindex, endindex, component_type))
+        indices.append((startindex, endindex, component_type, rel_idx, rel_type))
     return indices
 
 
@@ -92,7 +115,7 @@ def translation_indices(indices, alignment, pad_verb):
 
     aligns = []
     count = (0, 0, len(indices))
-    for start, end, component_type in indices:
+    for start, end, component_type, rel_idx, rel_type in indices:
         trg_align_list = []
         for idx in range(start, end+1):
             if idx in alignment_dict:
@@ -118,11 +141,11 @@ def translation_indices(indices, alignment, pad_verb):
             if idx_start <= prev_end_idx:
                 idx_start = prev_end_idx+1
 
-        aligns.append((idx_start, idx_end, component_type))
+        aligns.append((idx_start, idx_end, component_type, rel_idx, rel_type))
     return aligns, count
 
 
-def printout(idx, sequence, output_path, component_type="O"):
+def printout(idx, sequence, output_path, component_type="O", rel_idx="-1", rel_type="none"):
     tmp = idx
     with open(output_path, 'a+') as output_file:
         for i, token in enumerate(sequence):
@@ -133,7 +156,12 @@ def printout(idx, sequence, output_path, component_type="O"):
                     pre = "I-"
             else:
                 pre = ""
-            output_file.write(f'{tmp}\t{token}\t{pre}{component_type}\n')
+            if (rel_idx == "-1" and rel_type != "none"):
+                output_file.write(f'{tmp}\t{token}\t{pre}{component_type}{":"}{rel_type}\n')
+            elif (rel_idx != "-1" and rel_type != "none"):
+                output_file.write(f'{tmp}\t{token}\t{pre}{component_type}{":"}{rel_idx}{":"}{rel_type}\n')
+            else:
+                output_file.write(f'{tmp}\t{token}\t{pre}{component_type}\n')
             tmp += 1
     return tmp
 
@@ -161,7 +189,7 @@ def process(sentences, sentences_alignments, labels, fout, pad_verbosity):
         aligns = sorted(align_tuples)
         count = (count[0] + c[0], count[1] + c[1], count[2] + c[2])
         prev = 0
-        for start, end, component_type in aligns:
+        for start, end, component_type, rel_idx, rel_type in aligns:
             if start == 78:
                 print('-----', start, end, component_type)
                 sys.exit(1)
@@ -172,7 +200,7 @@ def process(sentences, sentences_alignments, labels, fout, pad_verbosity):
                 idx = printout(idx, before_adu, fout)
 
             adu = trg_tokens[start:end+1]
-            idx = printout(idx, adu, fout, component_type)
+            idx = printout(idx, adu, fout, component_type, rel_idx, rel_type)
 
             prev = end+1
         after_adu = trg_tokens[prev:]
@@ -218,9 +246,126 @@ def create_conll(corpus_path, alignments, translations, output_path, pad_verbosi
         print(f'Single: {count[0]}, Multi: {count[1]}, Total: {count[2]}')
     print(f'# sentences: {total_sent}')
 
+def create_conll_hardcode(corpus_path, alignments, translations, output_path, pad_verbosity=True, reverse=False):
+
+    annotation_dict = [
+        ('To sum up , technology has helped us to have more comfortable life .', 
+        [
+        ('To', 'O'),
+        ('sum', 'O'), 
+        ('up', 'O'), 
+        (',', 'O'), 
+        ('technology', 'B-MajorClaim'), 
+        ('has', 'I-MajorClaim'),
+        ('helped', 'I-MajorClaim'), 
+        ('us', 'I-MajorClaim'), 
+        ('to', 'I-MajorClaim'), 
+        ('have', 'I-MajorClaim'),
+        ('more', 'I-MajorClaim'), 
+        ('confortable', 'I-MajorClaim'), 
+        ('life', 'I-MajorClaim'), 
+        ('.', 'O')
+        ]),
+
+        ('The last 50 years have seen a significant increase in the number of tourist traveling worldwide . While some might think the tourism bring large profit for the destination countries , I would contend that this industry has affected the cultural attributes and damaged the natural environment of the tourist destinations .', 
+        [
+        ('The', 'O'),
+        ('last', 'O'), 
+        ('50', 'O'), 
+        ('years', 'O'), 
+        ('have', 'O'), 
+        ('seen', 'O'),
+        ('a', 'O'), 
+        ('significant', 'O'), 
+        ('increase', 'O'), 
+        ('in', 'O'),
+        ('the', 'O'), 
+        ('number', 'O'), 
+        ('of', 'O'), 
+        ('tourist', 'O'),
+        ('traveling', 'O'),
+        ('worldwide', 'O'),
+        ('.', 'O'),
+        ('While', 'O'),
+        ('some', 'O'), 
+        ('might', 'O'), 
+        ('think', 'O'), 
+        ('the', 'B-Claim'), 
+        ('tourism', 'I-Claim'),
+        ('bring', 'I-Claim'), 
+        ('large', 'I-Claim'), 
+        ('profit', 'I-Claim'), 
+        ('for', 'I-Claim'),
+        ('the', 'I-Claim'), 
+        ('destination', 'I-Claim'), 
+        ('countries', 'I-Claim'), 
+        (',', 'O'),
+        ('I', 'O'),
+        ('would', 'O'),
+        ('contend', 'O'),
+        ('that', 'O'),
+        ('this', 'B-MajorClaim:6:Against'),
+        ('industry', 'I-MajorClaim:6:Against'),
+        ('has', 'I-MajorClaim:6:Against'),
+        ('affected', 'I-MajorClaim:6:Against'),
+        ('the', 'I-MajorClaim:6:Against'),
+        ('cultural', 'I-MajorClaim:6:Against'),
+        ('attributes', 'I-MajorClaim:6:Against'),
+        ('and', 'I-MajorClaim:6:Against'),
+        ('damaged', 'I-MajorClaim:6:Against'),
+        ('the', 'I-MajorClaim:6:Against'),
+        ('natural', 'I-MajorClaim:6:Against'),
+        ('environment', 'I-MajorClaim:6:Against'),
+        ('of', 'I-MajorClaim:6:Against'),
+        ('the', 'I-MajorClaim:6:Against'),
+        ('tourist', 'I-MajorClaim:6:Against'),
+        ('destinations', 'I-MajorClaim:6:Against'),
+        ('.', 'O')
+        ])
+
+        ]
+
+    count = (0, 0, 0)
+    total_sent = 0
+    curr_idx = 0
+
+    for paragraph, labels in annotation_dict:
+
+        sentences_alignments = []
+
+        # sentences_in_paragraph = free_text_to_sentences(paragraph)
+
+        num_sentences = count_sent_translation_parag(translations, curr_idx)
+
+        print(f'Index range: {curr_idx} - {curr_idx+num_sentences}')
+        print(f'Num sentences: {num_sentences}')
+
+
+        if not reverse:
+            sentences = [tuple(trans.split(" ||| "))
+                         for trans in translations[curr_idx:curr_idx+num_sentences]]
+        else:
+            sentences = [tuple(trans.split(" ||| "))[::-1] 
+                         for trans in translations[curr_idx:curr_idx+num_sentences]]
+
+        sentences_alignments = alignments[curr_idx:curr_idx+num_sentences]
+
+        c = process(sentences, sentences_alignments, labels, output_path, pad_verbosity)
+        count = (count[0] + c[0], count[1] + c[1], count[2] + c[2])
+
+        total_sent += num_sentences
+        curr_idx += num_sentences + 1
+
+        with open(output_path, 'a+') as output_file:
+            output_file.write("\n")
+
+    if pad_verbosity:
+        print(f'Single: {count[0]}, Multi: {count[1]}, Total: {count[2]}')
+    print(f'# sentences: {total_sent}')
 
 # %%
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description="Project annotations and create translated ConLL-formatted train/dev/test split.",
                                      epilog="example: python project_annotations.py train_conll train_translated_file train_alignment_file")
     parser.add_argument("corpus_path", type=Path)
@@ -243,8 +388,24 @@ if __name__ == "__main__":
     print(f'Pad Verbosity: {args.pad_verbosity}')
     print(f'Reverse: {args.reverse}')
 
-    create_conll(args.corpus_path, alignments,
-                 translations, output_path, args.pad_verbosity, args.reverse)
+    create_conll(args.corpus_path, alignments, translations, output_path, args.pad_verbosity, args.reverse)
+
+"""     translations = [
+    'To sum up , technology has helped us to have more comfortable life . ||| Resumindo , a tecnologia nos ajudou a ter uma vida mais confotável .', 
+    '\n', 
+    'The last 50 years have seen a significant increase in the number of tourist traveling worldwide . ||| Os últimos 50 anos têm visto um aumento significativo no número de turistas viajando em todo o mundo . ',
+    'While some might think the tourism bring large profit for the destination countries , I would contend that this industry has affected the cultural attributes and damaged the natural environment of the tourist destinations . ||| Embora alguns possam pensar que o turismo traz grande lucro para os países de destino , eu afirmaria que esta indústria tem afetado os atributos culturais e danificado o ambiente natural dos destinos turísticos . ',
+    '\n']
+
+    alignments = [
+    '0-2 1-0 2-0 3-1 4-3 5-5 6-5 7-4 8-6 9-7 10-10 11-11 12-9 13-12', 
+    '\n', 
+    '0-0 1-1 2-2 3-3 4-4 5-5 6-6 7-8 8-7 9-9 11-10 12-11 13-12 14-13 15-17 16-18',
+    '0-0 1-1 2-2 3-3 4-5 5-6 6-7 7-8 8-9 9-10 10-11 11-14 12-12 13-15 14-16 15-17 16-17 17-18 18-19 19-20 20-21 21-22 22-23 23-25 24-24 25-26 26-27 27-28 28-30 29-29 30-31 32-33 33-32 34-34',
+    '\n']
+
+    create_conll_hardcode("C:/Users/Bernardo/Desktop/argumentation_mining_pt/data/en_pe/small_test.dat", alignments, translations, "../TO_REMOVE.dat", False, False)
+ """
 
 # %%
 # Single example test
