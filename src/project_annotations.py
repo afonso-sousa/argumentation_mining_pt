@@ -9,17 +9,16 @@ import sys
 from pathlib import Path
 
 import nltk
-from nltk.tokenize import sent_tokenize
+from nltk import tokenize 
+
 
 from utils import read_doc
 
 # nltk.download('punkt')
 
-
 def free_text_to_sentences(text):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
     return tokenizer.tokenize(text)
-
 
 def detect_bios(labels):
     if labels == []:
@@ -28,7 +27,7 @@ def detect_bios(labels):
     start_component = False
     startindex = 0
     component_type = 'O'
-    rel_idx = '-1'
+    rel_idx = -1
     rel_type = 'none'
 
     for index, tok in enumerate(labels):
@@ -41,13 +40,13 @@ def detect_bios(labels):
             all_cols = token.split(":")
             component_type = all_cols[0][2:]
             if len(all_cols) == 1:
-                rel_idx = '-1'
+                rel_idx = -1
                 rel_type = 'none'
             elif len(all_cols) == 2:
-                rel_idx = '-1'
+                rel_idx = -1
                 rel_type = all_cols[1]
             elif len(all_cols) == 3:
-                rel_idx = all_cols[1]
+                rel_idx = int(all_cols[1])
                 rel_type = all_cols[2]
             start_component = True
         # component finished
@@ -60,13 +59,13 @@ def detect_bios(labels):
             all_cols = token.split(":")
             component_type = all_cols[0][2:]
             if len(all_cols) == 1:
-                rel_idx = '-1'
+                rel_idx = -1
                 rel_type = 'none'
             elif len(all_cols) == 2:
-                rel_idx = '-1'
+                rel_idx = -1
                 rel_type = all_cols[1]
             elif len(all_cols) == 3:
-                rel_idx = all_cols[1]
+                rel_idx = int(all_cols[1])
                 rel_type = all_cols[2]
             start_component = True
             startindex = index
@@ -100,9 +99,7 @@ def pad_verbosity(value, trg_aligns, right=False):
         count_simple = 1
         if new_value - value >= 2:
             count_multi = 1
-    print('OK')
     return new_value, (count_simple, count_multi)
-
 
 def translation_indices(indices, alignment, pad_verb):
     alignment_dict = {}
@@ -145,7 +142,7 @@ def translation_indices(indices, alignment, pad_verb):
     return aligns, count
 
 
-def printout(idx, sequence, output_path, component_type="O", rel_idx="-1", rel_type="none"):
+def printout(idx, sequence, output_path, component_type="O", rel_idx=-1, rel_type="none", relations=False):
     tmp = idx
     with open(output_path, 'a+') as output_file:
         for i, token in enumerate(sequence):
@@ -156,24 +153,39 @@ def printout(idx, sequence, output_path, component_type="O", rel_idx="-1", rel_t
                     pre = "I-"
             else:
                 pre = ""
-            if (rel_idx == "-1" and rel_type != "none"):
+            if (rel_idx == -1 and rel_type != "none" and relations == True):
                 output_file.write(f'{tmp}\t{token}\t{pre}{component_type}{":"}{rel_type}\n')
-            elif (rel_idx != "-1" and rel_type != "none"):
+            elif (rel_idx != -1 and rel_type != "none" and relations == True):
                 output_file.write(f'{tmp}\t{token}\t{pre}{component_type}{":"}{rel_idx}{":"}{rel_type}\n')
             else:
                 output_file.write(f'{tmp}\t{token}\t{pre}{component_type}\n')
             tmp += 1
     return tmp
 
+def write_to_file(annotation_dict, file_path):
+    with open(file_path, 'r+') as output_file:
+        output_file.seek(0)
+        output_file.truncate()
+        for paragraph, labels in annotation_dict:
+            idx = 1
+            for label in labels:
+                output_file.write(f'{idx}\t{label[0]}\t{label[1]}\n')
+                idx += 1
+            output_file.write('\n')
 
-def process(sentences, sentences_alignments, labels, fout, pad_verbosity):
+def process(sentences, sentences_alignments, labels, fout, pad_verbosity, relations):
     last = 0
     idx = 1
     count = (0, 0, 0)
+    sents_nr_tokens = []
     for i in range(len(sentences)):
         src, trg = sentences[i]
         src_tokens = src.split()
         trg_tokens = trg.split()
+
+        sent_nr_tokens = {'en':len(src_tokens), 'pt':len(trg_tokens)}
+        sents_nr_tokens.append(sent_nr_tokens)
+
         len_src_sent = len(src_tokens)
         align = sentences_alignments[i].strip()
         curr_labels = labels[last:last+len_src_sent]
@@ -200,13 +212,13 @@ def process(sentences, sentences_alignments, labels, fout, pad_verbosity):
                 idx = printout(idx, before_adu, fout)
 
             adu = trg_tokens[start:end+1]
-            idx = printout(idx, adu, fout, component_type, rel_idx, rel_type)
+            idx = printout(idx, adu, fout, component_type, rel_idx, rel_type, relations)
 
             prev = end+1
         after_adu = trg_tokens[prev:]
         if after_adu != []:
             idx = printout(idx, after_adu, fout)
-    return count
+    return count, sents_nr_tokens
 
 
 def count_sent_translation_parag(translations, position):
@@ -214,14 +226,129 @@ def count_sent_translation_parag(translations, position):
         if line == '\n':
             return i
 
+def get_idx_target_from_range(rel_idx_tgt, bios_ranges):
 
-def create_conll(corpus_path, alignments, translations, output_path, pad_verbosity=True, reverse=False):
+    diff_start_idx = 1000000
+    most_close_start_idx = 1000000
+    inside_range = False
+
+    #generic solution
+    for bio in bios_ranges:
+        start_idx = bio[0]
+        end_idx = bio[1]
+        if start_idx <= rel_idx_tgt <= end_idx:
+            inside_range = True
+            return start_idx
+    
+    #solves problem 2 and 4
+    if (inside_range == False):
+        for bio in bios_ranges:
+            start_idx = bio[0]
+            if ( abs(start_idx - rel_idx_tgt) < diff_start_idx):
+                diff_start_idx = abs(start_idx - rel_idx_tgt)
+                most_close_start_idx = start_idx
+        return most_close_start_idx
+
+    return -1
+
+def get_idx_from_adu_compare(scr_bios_adu, tgt_bios_adu, rel_idx_src):
+    for i, bios in enumerate(scr_bios_adu):
+        if rel_idx_src >= bios[0] and rel_idx_src <= bios[1]:
+            rel_idx_tgt = tgt_bios_adu[i][0]
+            return rel_idx_tgt
+
+    return -1
+
+def create_conll_relations(corpus_path, alignments, all_sentences_alignments, translations, all_original_bios, all_sents_nr_tokens, output_path):
+    annotation_dict = read_doc(corpus_path)
+    total_sent = 0
+    curr_idx = 0
+
+    #print(len(annotation_dict))
+    #print(len(all_sents_nr_tokens))
+    #print(len(all_sentences_alignments))
+
+    idx_annotation = 0
+    for paragraph, labels in annotation_dict:
+        bios_ranges = detect_bios(labels)
+        num_sentences = count_sent_translation_parag(translations, curr_idx)
+
+        nr_words_en = 0
+        nr_words_pt = 0
+
+        all_sents_align_dict = {}
+
+        for i in range(total_sent, total_sent + num_sentences):
+
+            sent_align_dict = dict(x.split("-") for x in all_sentences_alignments[i].split())
+            sent_align_dict = {int(k)+nr_words_en:int(v)+nr_words_pt for k,v in sent_align_dict.items()}
+
+            nr_words_en += all_sents_nr_tokens[i]["en"]
+            nr_words_pt += all_sents_nr_tokens[i]["pt"]
+            #Problem 1 if nr_words_pt != len(labels)
+
+            all_sents_align_dict.update(sent_align_dict)
+
+        for nr_bios, bios in enumerate(bios_ranges):
+            if bios[3] != -1 and (bios[3] - 1) >= 0:
+
+                rel_idx_src = bios[3] - 1
+                old_rel_idx_tgt = bios[3]
+                
+                if rel_idx_src in all_sents_align_dict.keys():
+                    rel_idx_tgt = all_sents_align_dict[rel_idx_src]
+
+                    #Problems 2 and 4 are handled in this function 
+                    rel_idx_tgt = get_idx_target_from_range(rel_idx_tgt, bios_ranges)
+
+                else: #Problem 3 handled
+                    if len(all_original_bios[idx_annotation]) == len(bios_ranges):
+                        rel_idx_tgt = get_idx_from_adu_compare(all_original_bios[idx_annotation], bios_ranges, rel_idx_src)
+                    else:
+                        rel_idx_tgt = -1
+
+                if (rel_idx_tgt != -1):
+                    #update indice bios
+                    list_bios = list(bios_ranges[nr_bios])
+                    list_bios[3] = rel_idx_tgt 
+                    bios_ranges[nr_bios] = tuple(list_bios)
+
+                    #update labels
+                    start_idx = bios[0]
+                    end_idx = bios[1]
+                    for label_idx in range(start_idx,end_idx+1):
+                        list_label = list(labels[label_idx])
+                        list_label[1] = list_label[1].replace(str(old_rel_idx_tgt), str(rel_idx_tgt+1))
+                        labels[label_idx] = tuple(list_label)
+                else:
+                    print("!!!!!!!!ERROR!!!!!!!!!!")
+                    sys.exit()
+    
+        idx_annotation += 1
+
+        total_sent += num_sentences
+        curr_idx += num_sentences + 1
+
+        nr_words_en = 0
+        nr_words_pt = 0
+
+    write_to_file(annotation_dict, output_path)
+
+def create_conll(corpus_path, alignments, translations, output_path, pad_verbosity=True, reverse=False, relations=False):
     annotation_dict = read_doc(corpus_path)
     count = (0, 0, 0)
     total_sent = 0
     curr_idx = 0
 
+    all_sentences_alignments = []
+    all_sents_nr_tokens = []
+    all_original_bios = []
+
     for paragraph, labels in annotation_dict:
+        
+        original_bios = detect_bios(labels)
+        all_original_bios.append(original_bios)
+
         sentences_alignments = []
         # sentences_in_paragraph = free_text_to_sentences(paragraph)
         num_sentences = count_sent_translation_parag(translations, curr_idx)
@@ -235,8 +362,13 @@ def create_conll(corpus_path, alignments, translations, output_path, pad_verbosi
                          for trans in translations[curr_idx:curr_idx+num_sentences]]
         sentences_alignments = alignments[curr_idx:curr_idx+num_sentences]
 
-        c = process(sentences, sentences_alignments,
-                    labels, output_path, pad_verbosity)
+        all_sentences_alignments.extend(sentences_alignments)
+
+        c, sents_nr_tokens = process(sentences, sentences_alignments,
+                    labels, output_path, pad_verbosity, relations)
+
+        all_sents_nr_tokens.extend(sents_nr_tokens)
+
         count = (count[0] + c[0], count[1] + c[1], count[2] + c[2])
         total_sent += num_sentences
         curr_idx += num_sentences + 1
@@ -245,6 +377,9 @@ def create_conll(corpus_path, alignments, translations, output_path, pad_verbosi
     if pad_verbosity:
         print(f'Single: {count[0]}, Multi: {count[1]}, Total: {count[2]}')
     print(f'# sentences: {total_sent}')
+
+    if relations:
+        create_conll_relations(output_path, alignments, all_sentences_alignments, translations, all_original_bios, all_sents_nr_tokens, output_path)
 
 def create_conll_hardcode(corpus_path, alignments, translations, output_path, pad_verbosity=True, reverse=False):
 
@@ -340,7 +475,6 @@ def create_conll_hardcode(corpus_path, alignments, translations, output_path, pa
         print(f'Index range: {curr_idx} - {curr_idx+num_sentences}')
         print(f'Num sentences: {num_sentences}')
 
-
         if not reverse:
             sentences = [tuple(trans.split(" ||| "))
                          for trans in translations[curr_idx:curr_idx+num_sentences]]
@@ -350,7 +484,7 @@ def create_conll_hardcode(corpus_path, alignments, translations, output_path, pa
 
         sentences_alignments = alignments[curr_idx:curr_idx+num_sentences]
 
-        c = process(sentences, sentences_alignments, labels, output_path, pad_verbosity)
+        c, sents_nr_tokens = process(sentences, sentences_alignments, labels, output_path, pad_verbosity)
         count = (count[0] + c[0], count[1] + c[1], count[2] + c[2])
 
         total_sent += num_sentences
@@ -374,6 +508,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=Path, default=".")
     parser.add_argument('--pad_verbosity', action='store_true', default=False)
     parser.add_argument('--reverse', action='store_true', default=False)
+    parser.add_argument('--relations', action='store_true', default=False)
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -388,7 +523,7 @@ if __name__ == "__main__":
     print(f'Pad Verbosity: {args.pad_verbosity}')
     print(f'Reverse: {args.reverse}')
 
-    create_conll(args.corpus_path, alignments, translations, output_path, args.pad_verbosity, args.reverse)
+    create_conll(args.corpus_path, alignments, translations, output_path, args.pad_verbosity, args.reverse, args.relations)
 
 """     translations = [
     'To sum up , technology has helped us to have more comfortable life . ||| Resumindo , a tecnologia nos ajudou a ter uma vida mais confotável .', 
