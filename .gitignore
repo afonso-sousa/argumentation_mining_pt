@@ -150,6 +150,7 @@ dmypy.json
 .ionide
 
 # Local files
+tagger_old/*
 data/*
 tagger/embeddings/*
 tagger/trained/*
