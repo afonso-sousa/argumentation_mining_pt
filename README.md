@@ -7,7 +7,7 @@ It uses code from the following third-party repositories:
 - Multilingual word embeddings from [this repo](https://github.com/facebookresearch/MUSE).
 
 ## Usage
-Make use of the script files on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/scripts) to build the annotation projection corpus or scripts on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/tagger/scripts) for train and evaluation of the sequence tagging models. For sequence tagging, we adopt the model from [NeuroNLP2](https://www.aclweb.org/anthology/P16-1101). For a detailed explanation on how to use the tagger tool, please refer to the [NeuroNLP2 repository](https://github.com/XuezheMax/NeuroNLP2).
+Make use of the script files on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/scripts) to build the annotation projection corpus or scripts on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/tagger/scripts) for train and evaluation of the sequence tagging models. For sequence tagging, we adopt the model from NeuroNLP2. For a detailed explanation on how to use the tagger tool, please refer to the [NeuroNLP2 repository](https://github.com/XuezheMax/NeuroNLP2).
 
 ## Building the Portuguese Dataset
 Assuming the following file structure:
@@ -68,3 +68,4 @@ These scripts create the "pt_pe" folder to store the Portuguese version of the d
 To execute the annotation projection script, the following packages are required:
 - NLTK
 
+### Licenses
