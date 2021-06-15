@@ -4,12 +4,10 @@ It uses code from the following third-party repositories:
 - Preprocessed data from [this repo](https://github.com/UKPLab/acl2017-neural_end2end_am);
 - Annotation Projection algorithm from [this repo](https://github.com/UKPLab/coling2018-xling_argument_mining);
 - [SimAlign](https://github.com/cisnlp/simalign) as the word alignment tool;
-- [Targer](https://github.com/achernodub/targer) as a neural tagger;
 - Multilingual word embeddings from [this repo](https://github.com/facebookresearch/MUSE).
 
 ## Usage
-Make use of the script files on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/scripts) to build the annotation projection corpus or scripts on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/tagger/scripts) for train and evaluation of the sequence tagging models.
-For a detail explanation on how to use the tagger tool to train/evaluate/save models, please refer to the [Tagger repo](https://github.com/achernodub/targer).
+Make use of the script files on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/scripts) to build the annotation projection corpus or scripts on [this folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/tagger/scripts) for train and evaluation of the sequence tagging models. For sequence tagging, we adopt the model from NeuroNLP2. For a detailed explanation on how to use the tagger tool, please refer to the [NeuroNLP2 repository](https://github.com/XuezheMax/NeuroNLP2).
 
 ## Building the Portuguese Dataset
 Assuming the following file structure:
@@ -24,7 +22,7 @@ Firstly, create free-text files for each train/dev/test file.
 ```bash
 python src/convert_to_free_text.py data/auxiliary/train_ft.txt data/en_pe/train.dat
 python src/convert_to_free_text.py data/auxiliary/dev_ft.txt data/en_pe/dev.dat
-python src/convert_to_free_text.py data/auxiliary/dev_ft.txt data/en_pe/test.dat
+python src/convert_to_free_text.py data/auxiliary/test_ft.txt data/en_pe/test.dat
 ```
 These scripts create the "auxiliary" folder to store the auxiliary files for the construction of the dataset.
 
@@ -70,3 +68,4 @@ These scripts create the "pt_pe" folder to store the Portuguese version of the d
 To execute the annotation projection script, the following packages are required:
 - NLTK
 
+### Licenses
