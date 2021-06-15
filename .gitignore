@@ -149,10 +149,3 @@ dmypy.json
 .history
 .ionide
 
-# Local files
-tagger_old/*
-all_data/*
-tagger/embeddings/*
-tagger/trained/*
-images/*
-umwe/
