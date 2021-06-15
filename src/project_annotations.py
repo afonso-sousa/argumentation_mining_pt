@@ -16,11 +16,6 @@ from utils import read_doc
 # nltk.download('punkt')
 
 
-def free_text_to_sentences(text):
-    tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    return tokenizer.tokenize(text)
-
-
 def detect_bios(labels):
     if labels == []:
         return []
@@ -162,9 +157,6 @@ def process(sentences, sentences_alignments, labels, fout, pad_verbosity):
         count = (count[0] + c[0], count[1] + c[1], count[2] + c[2])
         prev = 0
         for start, end, component_type in aligns:
-            if start == 78:
-                print('-----', start, end, component_type)
-                sys.exit(1)
             if start >= end:
                 continue
             before_adu = trg_tokens[prev:start]
@@ -193,9 +185,8 @@ def create_conll(corpus_path, alignments, translations, output_path, pad_verbosi
     total_sent = 0
     curr_idx = 0
 
-    for paragraph, labels in annotation_dict:
+    for _, labels in annotation_dict:
         sentences_alignments = []
-        # sentences_in_paragraph = free_text_to_sentences(paragraph)
         num_sentences = count_sent_translation_parag(translations, curr_idx)
         print(f'Index range: {curr_idx} - {curr_idx+num_sentences}')
         print(f'Num sentences: {num_sentences}')
