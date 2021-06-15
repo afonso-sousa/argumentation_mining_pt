@@ -500,7 +500,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=Path, default=".")
     parser.add_argument('--pad_verbosity', action='store_true', default=False)
     parser.add_argument('--reverse', action='store_true', default=False)
-    parser.add_argument('--relations', action='store_true', default=False)
+    parser.add_argument('--relations', action='store_true', default=True)
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
