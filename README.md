@@ -34,9 +34,9 @@ To build the Portuguese version of the Persuasive Essays, we used the CoNLL-form
 ### Free-text
 To start building the dataset, create free-text files for each train/dev/test file.
 ```bash
-python src/convert_to_free_text.py data/auxiliary/train_ft.txt data/en_pe/train.dat
-python src/convert_to_free_text.py data/auxiliary/dev_ft.txt data/en_pe/dev.dat
-python src/convert_to_free_text.py data/auxiliary/test_ft.txt data/en_pe/test.dat
+python src/convert_to_free_text.py data/auxiliary/train/train_ft.txt data/en_pe/train.dat
+python src/convert_to_free_text.py data/auxiliary/dev/dev_ft.txt data/en_pe/dev.dat
+python src/convert_to_free_text.py data/auxiliary/test/test_ft.txt data/en_pe/test.dat
 ```
 These scripts create the "auxiliary" folder in the root folder to store further auxiliary files for the construction of the dataset.
 
@@ -44,27 +44,27 @@ These scripts create the "auxiliary" folder in the root folder to store further 
 Next, translate the free-text files.
 
 ```bash
-python src/translator.py data/auxiliary/train_ft.txt --src_lang en --trg_lang pt
-python src/translator.py data/auxiliary/dev_ft.txt --src_lang en --trg_lang pt
-python src/translator.py data/auxiliary/test_ft.txt --src_lang en --trg_lang pt
+python src/translator.py data/auxiliary/train/train_ft.txt --src_lang en --trg_lang pt
+python src/translator.py data/auxiliary/dev/dev_ft.txt --src_lang en --trg_lang pt
+python src/translator.py data/auxiliary/test/test_ft.txt --src_lang en --trg_lang pt
 ```
 You will end up with a file with parallel data seperated by the "|||" sequence, sentences split by a break line and paragraph split by an empty line.
 
 ### Alignment
 Next, generate alignment files for the previously created files with translations.
 ```bash
-python src/align.py data/auxiliary/train_ft_translated.txt
-python src/align.py data/auxiliary/dev_ft_translated.txt
-python src/align.py data/auxiliary/test_ft_translated.txt
+python src/align.py data/auxiliary/train/train_ft_translated.txt
+python src/align.py data/auxiliary/dev/dev_ft_translated.txt
+python src/align.py data/auxiliary/test/test_ft_translated.txt
 ```
 The generated file follows the structure from the translation file, but instead of parallel data has per-token index pairs. 
 
 ### Annotation Projection
 Finally, project the annotations.
 ```bash
-python src/project_annotations.py data/en_pe/train.dat data/auxiliary/train_ft_translated.txt data/auxiliary/train_ft_translated_alignment.txt --output_path data/pt_pe
-python src/project_annotations.py data/en_pe/dev.dat data/auxiliary/dev_ft_translated.txt data/auxiliary/dev_ft_translated_alignment.txt --output_path data/pt_pe
-python src/project_annotations.py data/en_pe/test.dat data/auxiliary/test_ft_translated.txt data/auxiliary/test_ft_translated_alignment.txt --output_path data/pt_pe
+python src/project_annotations.py data/en_pe/train.dat data/auxiliary/train/train_ft_translated.txt data/auxiliary/train/train_ft_translated_alignment.txt --output_path data/pt_pe
+python src/project_annotations.py data/en_pe/dev.dat data/auxiliary/dev/dev_ft_translated.txt data/auxiliary/dev/dev_ft_translated_alignment.txt --output_path data/pt_pe
+python src/project_annotations.py data/en_pe/test/test.dat data/auxiliary/test/test_ft_translated.txt data/auxiliary/test/test_ft_translated_alignment.txt --output_path data/pt_pe
 ```
 These scripts create the "pt_pe" folder to store the Portuguese version of the dataset.
 
