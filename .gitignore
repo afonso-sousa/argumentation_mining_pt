@@ -151,7 +151,7 @@ dmypy.json
 
 # Local files
 tagger_old/*
-data/*
+all_data/*
 tagger/embeddings/*
 tagger/trained/*
 images/*
