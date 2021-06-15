@@ -74,7 +74,7 @@ We performed both intrinsic and extrinsic evaluation of the corpus.
 ### Intrinsic Evaluation
 To replicate the results in the paper for intrinsic evaluation, run:
 ```bash
-python src/eval_en_from_pt.py data/en_pe/ data/en_from_pt_pe/
+python src/eval_en_from_pt.py data/en_pe/ data/en_from_pt_pe_pad/
 ```
 Alternatively, you can run the same evaluation per split using the _--split_ tag, and with or without padding with _--with_pad_.
 
@@ -82,4 +82,4 @@ Alternatively, you can run the same evaluation per split using the _--split_ tag
 There are two licenses for this project:
 
 - The [first one](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/LICENSE) applies to all files except for the [data folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/data);
-- The other license applies to the [data folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/data). This folder contains both the original PE corpus in English (data/en_pe), as well as the subsequent translated, aligned and projected Portuguese files. This licence can be found [here](https://tudatalib.ulb.tu-darmstadt.de/handle/tudatalib/2422).
+- The [other license](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/blob/main/data/license.pdf) applies to the [data folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/data). This folder contains both the [PE corpus in English](https://github.com/UKPLab/acl2017-neural_end2end_am/tree/master/data/) (data/en_pe), as well as the subsequent translated, aligned, and projected Portuguese files. The license can be found [here](https://tudatalib.ulb.tu-darmstadt.de/handle/tudatalib/2422).
