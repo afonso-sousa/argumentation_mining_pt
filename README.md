@@ -22,7 +22,7 @@ Firstly, create free-text files for each train/dev/test file.
 ```bash
 python src/convert_to_free_text.py data/auxiliary/train_ft.txt data/en_pe/train.dat
 python src/convert_to_free_text.py data/auxiliary/dev_ft.txt data/en_pe/dev.dat
-python src/convert_to_free_text.py data/auxiliary/dev_ft.txt data/en_pe/test.dat
+python src/convert_to_free_text.py data/auxiliary/test_ft.txt data/en_pe/test.dat
 ```
 These scripts create the "auxiliary" folder to store the auxiliary files for the construction of the dataset.
 
