@@ -74,7 +74,7 @@ We performed both intrinsic and extrinsic evaluation of the corpus.
 ### Intrinsic Evaluation
 To replicate the results in the paper for intrinsic evaluation, run:
 ```bash
-python src/eval_en_from_pt.py data/en_pe/ data/en_from_pt_pe/
+python src/eval_en_from_pt.py data/en_pe/ data/en_from_pt_pe_pad/
 ```
 Alternatively, you can run the same evaluation per split using the _--split_ tag, and with or without padding with _--with_pad_.
 
