@@ -64,7 +64,7 @@ Finally, project the annotations.
 ```bash
 python src/project_annotations.py data/en_pe/train.dat data/auxiliary/train/train_ft_translated.txt data/auxiliary/train/train_ft_translated_alignment.txt --output_path data/pt_pe
 python src/project_annotations.py data/en_pe/dev.dat data/auxiliary/dev/dev_ft_translated.txt data/auxiliary/dev/dev_ft_translated_alignment.txt --output_path data/pt_pe
-python src/project_annotations.py data/en_pe/test/test.dat data/auxiliary/test/test_ft_translated.txt data/auxiliary/test/test_ft_translated_alignment.txt --output_path data/pt_pe
+python src/project_annotations.py data/en_pe/test.dat data/auxiliary/test/test_ft_translated.txt data/auxiliary/test/test_ft_translated_alignment.txt --output_path data/pt_pe
 ```
 These scripts create the "pt_pe" folder to store the Portuguese version of the dataset.
 
