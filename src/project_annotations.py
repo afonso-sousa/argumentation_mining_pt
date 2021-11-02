@@ -517,23 +517,6 @@ if __name__ == "__main__":
 
     create_conll(args.corpus_path, alignments, translations, output_path, args.pad_verbosity, args.reverse, args.relations)
 
-"""     translations = [
-    'To sum up , technology has helped us to have more comfortable life . ||| Resumindo , a tecnologia nos ajudou a ter uma vida mais confotável .', 
-    '\n', 
-    'The last 50 years have seen a significant increase in the number of tourist traveling worldwide . ||| Os últimos 50 anos têm visto um aumento significativo no número de turistas viajando em todo o mundo . ',
-    'While some might think the tourism bring large profit for the destination countries , I would contend that this industry has affected the cultural attributes and damaged the natural environment of the tourist destinations . ||| Embora alguns possam pensar que o turismo traz grande lucro para os países de destino , eu afirmaria que esta indústria tem afetado os atributos culturais e danificado o ambiente natural dos destinos turísticos . ',
-    '\n']
-
-    alignments = [
-    '0-2 1-0 2-0 3-1 4-3 5-5 6-5 7-4 8-6 9-7 10-10 11-11 12-9 13-12', 
-    '\n', 
-    '0-0 1-1 2-2 3-3 4-4 5-5 6-6 7-8 8-7 9-9 11-10 12-11 13-12 14-13 15-17 16-18',
-    '0-0 1-1 2-2 3-3 4-5 5-6 6-7 7-8 8-9 9-10 10-11 11-14 12-12 13-15 14-16 15-17 16-17 17-18 18-19 19-20 20-21 21-22 22-23 23-25 24-24 25-26 26-27 27-28 28-30 29-29 30-31 32-33 33-32 34-34',
-    '\n']
-
-    create_conll_hardcode("C:/Users/Bernardo/Desktop/argumentation_mining_pt/data/en_pe/small_test.dat", alignments, translations, "../TO_REMOVE.dat", False, False)
- """
-
 # %%
 # Single example test
 """
