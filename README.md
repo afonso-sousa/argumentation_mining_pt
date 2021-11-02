@@ -1,7 +1,40 @@
-Cross-Lingual Annotation Projection for ArgumentMining in Portuguese
+# Cross-Lingual Annotation Projection for Argument Mining in Portuguese
 ===============
-This repository contains the code to replicate the experiments in the paper.
-It uses code from the following third-party repositories:
+
+Sample source code and data for our EPIA 2O21 [paper](https://link.springer.com/chapter/10.1007/978-3-030-86230-5_59):
+
+```
+@inproceedings{10.1007/978-3-030-86230-5_59,
+author="Sousa, Afonso
+and Leite, Bernardo
+and Rocha, Gil
+and Lopes Cardoso, Henrique",
+editor="Marreiros, Goreti
+and Melo, Francisco S.
+and Lau, Nuno
+and Lopes Cardoso, Henrique
+and Reis, Lu{\'i}s Paulo",
+title="Cross-Lingual Annotation Projection for Argument Mining in Portuguese",
+booktitle="Progress in Artificial Intelligence",
+year="2021",
+publisher="Springer International Publishing",
+address="Cham",
+pages="752--765"
+}
+```
+
+> **Abstract:** While Argument Mining has seen increasing success in monolingual settings, especially for the English language, other less-resourced languages are still lagging behind. In this paper, we build a Portuguese projected version of the Persuasive Essays corpus and evaluate it both intrinsically (through back-projection) and extrinsically (in a sequence tagging task). To build the corpus, we project the token-level annotations into a new Portuguese version using translations and respective alignments. Intrinsic evaluation entails rebuilding the English corpus using back alignment and back projection from the Portuguese version, comparing against the original English annotations. For extrinsic evaluation, we assess and compare the performance of machine learning models on several language variants of the corpus (including the Portuguese one), following both in-language/projection training and direct transfer. Our evaluation highlights the quality of the generated corpus. Experimental results show the effectiveness of the projection approach, while providing competitive baselines for the Portuguese version of the corpus. The corpus and code are available (https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt).
+
+
+* **Contact persons** 
+    * Afonso Sousa, ammlss@fe.up.pt
+    * Bernardo Leite, bernardo.leite@fe.up.pt
+    * Gil Rocha, gil.rocha@fe.up.pt
+    * Henrique Lopes Cardoso, hlc@fe.up.pt
+
+Drop us a line or report an issue if something is broken (and shouldn't be) or if you have any questions.
+
+This repository contains experimental software and is published for the sole purpose of giving additional background details on the respective publication. It uses code from the following third-party repositories:
 - Preprocessed data from [this repo](https://github.com/UKPLab/acl2017-neural_end2end_am);
 - [SimAlign](https://github.com/cisnlp/simalign) as the word alignment tool;
 - Multilingual word embeddings from [this repo](https://github.com/facebookresearch/MUSE).
@@ -78,7 +111,7 @@ python src/eval_en_from_pt.py data/en_pe/ data/en_from_pt_pe_pad/
 ```
 Alternatively, you can run the same evaluation per split using the _--split_ tag, and with or without padding with _--with_pad_.
 
-### Licenses
+## Licenses
 There are two licenses for this project:
 
 - The [first one](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/LICENSE) applies to all files except for the [data folder](https://github.com/AfonsoSalgadoSousa/argumentation_mining_pt/tree/main/data);
