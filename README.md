@@ -1,7 +1,7 @@
 # Cross-Lingual Annotation Projection for Argument Mining in Portuguese
 ===============
 
-Sample source code and data for our EPIA 2O21 [paper](https://link.springer.com/chapter/10.1007/978-3-030-86230-5_59):
+Sample source code and data for our EPIA 2021 [paper](https://link.springer.com/chapter/10.1007/978-3-030-86230-5_59):
 
 ```
 @inproceedings{10.1007/978-3-030-86230-5_59,
